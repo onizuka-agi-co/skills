@@ -3,15 +3,17 @@
 ## Endpoint
 
 ```
-POST https://queue.fal.run/fal-ai/nano-banana-2
+fal-ai/nano-banana-2
 ```
 
 ## Authentication
 
-Set `FAL_KEY` environment variable or include in request header:
+Set `FAL_KEY` environment variable or pass credentials directly:
 
-```
-Authorization: Key YOUR_FAL_KEY
+```python
+from fal_client import AsyncClient
+
+client = AsyncClient(credentials="YOUR_FAL_KEY")
 ```
 
 ## Input Schema
@@ -19,36 +21,36 @@ Authorization: Key YOUR_FAL_KEY
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `prompt` | string | ✅ | - | Text description of the image to generate |
-| `num_images` | integer | ❌ | 1 | Number of images to generate |
-| `aspect_ratio` | enum | ❌ | auto | Aspect ratio of the generated image |
-| `resolution` | enum | ❌ | 1K | Resolution of the image |
-| `output_format` | enum | ❌ | png | Output format (jpeg, png, webp) |
-| `seed` | integer | ❌ | random | Random seed for reproducibility |
-| `enable_web_search` | boolean | ❌ | false | Enable web search for latest info |
-| `limit_generations` | boolean | ❌ | true | Limit generations to 1 per round |
-| `safety_tolerance` | enum | ❌ | 4 | Content moderation (1-6, 1=strict) |
-| `sync_mode` | boolean | ❌ | false | Return as data URI |
+| `num_images` | integer | - | 1 | Number of images to generate |
+| `seed` | integer | - | random | Random seed for reproducibility |
+| `aspect_ratio` | enum | - | auto | Aspect ratio of generated image |
+| `output_format` | enum | - | png | Output format: jpeg, png, webp |
+| `safety_tolerance` | enum | - | 4 | Content moderation level (1-6) |
+| `sync_mode` | boolean | - | false | Return as data URI |
+| `resolution` | enum | - | 1K | Resolution: 0.5K, 1K, 2K, 4K |
+| `limit_generations` | boolean | - | true | Limit to 1 generation per prompt |
+| `enable_web_search` | boolean | - | false | Enable web search for latest info |
 
 ### Aspect Ratios
 
 - `auto` - Let model decide based on prompt
-- `21:9` - Ultrawide
+- `21:9` - Ultra-wide
 - `16:9` - Widescreen
 - `3:2` - Classic photo
 - `4:3` - Standard
-- `5:4` - Portrait standard
+- `5:4` - Near square
 - `1:1` - Square
 - `4:5` - Portrait
-- `3:4` - Portrait tall
-- `2:3` - Portrait taller
-- `9:16` - Vertical (mobile)
+- `3:4` - Portrait
+- `2:3` - Portrait
+- `9:16` - Mobile/portrait
 
 ### Resolutions
 
-- `0.5K` - 512px
+- `0.5K` - 512px (fastest)
 - `1K` - 1024px (default)
-- `2K` - 2048px
-- `4K` - 4096px
+- `2K` - 2048px (high quality)
+- `4K` - 4096px (highest quality)
 
 ## Output Schema
 
@@ -59,7 +61,7 @@ Authorization: Key YOUR_FAL_KEY
       "url": "https://...",
       "content_type": "image/png",
       "file_name": "nano-banana-2-t2i-output.png",
-      "file_size": 1234567,
+      "file_size": 123456,
       "width": 1024,
       "height": 1024
     }
@@ -68,74 +70,58 @@ Authorization: Key YOUR_FAL_KEY
 }
 ```
 
-## Queue-Based Workflow
+## Python Example
 
-The API uses a queue-based system:
+```python
+import asyncio
+from fal_client import AsyncClient
 
-1. **Submit request** → Get `request_id`
-2. **Poll status** → Check `status` field
-3. **Get result** → When `status === "COMPLETED"`
+async def generate():
+    client = AsyncClient(credentials="YOUR_FAL_KEY")
 
-### Status Values
+    result = await client.subscribe(
+        "fal-ai/nano-banana-2",
+        input={
+            "prompt": "A serene mountain landscape at sunset",
+            "aspect_ratio": "16:9",
+            "resolution": "2K",
+            "num_images": 1,
+        }
+    )
 
-- `IN_QUEUE` - Waiting in queue
-- `IN_PROGRESS` - Being processed
-- `COMPLETED` - Done, ready to fetch
-- `FAILED` - Error occurred
+    for img in result["images"]:
+        print(f"Image URL: {img['url']}")
 
-## Example Request (JavaScript)
+asyncio.run(generate())
+```
 
-```javascript
+## TypeScript Example
+
+```typescript
 import { fal } from "@fal-ai/client";
 
 const result = await fal.subscribe("fal-ai/nano-banana-2", {
   input: {
-    prompt: "A serene mountain landscape at sunset",
-    aspect_ratio: "16:9",
-    resolution: "2K",
-    num_images: 1
-  }
+    prompt: "A cyberpunk city at night",
+    aspect_ratio: "21:9",
+    resolution: "4K",
+  },
 });
 
 console.log(result.data.images[0].url);
 ```
 
-## Example Request (Python)
-
-```python
-import httpx
-
-api_key = "YOUR_FAL_KEY"
-url = "https://queue.fal.run/fal-ai/nano-banana-2"
-
-headers = {
-    "Authorization": f"Key {api_key}",
-    "Content-Type": "application/json"
-}
-
-payload = {
-    "prompt": "A serene mountain landscape at sunset",
-    "aspect_ratio": "16:9",
-    "resolution": "2K"
-}
-
-response = httpx.post(url, headers=headers, json=payload)
-result = response.json()
-print(result["images"][0]["url"])
-```
-
 ## Error Handling
 
-| Status Code | Description |
-|-------------|-------------|
-| 400 | Invalid request parameters |
-| 401 | Invalid or missing API key |
-| 429 | Rate limit exceeded |
-| 500 | Server error |
+Common errors:
+- `401 Unauthorized` - Invalid or missing API key
+- `429 Too Many Requests` - Rate limit exceeded
+- `500 Internal Server Error` - Model error, retry
 
 ## Rate Limits
 
-- Free tier: Limited requests per minute
-- Paid tier: Higher limits available
+Check fal.ai dashboard for current rate limits.
 
-Check fal.ai pricing for current limits.
+## Cost
+
+Check fal.ai pricing page for current pricing.
