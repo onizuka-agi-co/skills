@@ -3,57 +3,52 @@
 ## Endpoint
 
 ```
-fal-ai/nano-banana-2
+POST https://queue.fal.run/fal-ai/nano-banana-2
 ```
 
 ## Authentication
 
-Set `FAL_KEY` environment variable or create `~/fal-key.txt` file.
+Set `FAL_KEY` environment variable or include in request header:
 
-```bash
-export FAL_KEY="your-api-key"
+```
+Authorization: Key YOUR_FAL_KEY
 ```
 
 ## Input Schema
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `prompt` | string | Yes | - | Text description of the image |
-| `num_images` | integer | No | 1 | Number of images to generate (1-4) |
-| `aspect_ratio` | enum | No | auto | Aspect ratio |
-| `resolution` | enum | No | 1K | Resolution quality |
-| `output_format` | enum | No | png | Output image format |
-| `seed` | integer | No | random | Random seed for reproducibility |
-| `enable_web_search` | boolean | No | false | Enable web search for up-to-date info |
-| `safety_tolerance` | enum | No | 4 | Content moderation (1-6) |
-| `sync_mode` | boolean | No | false | Return as data URI |
+| `prompt` | string | ✅ | - | Text description of the image to generate |
+| `num_images` | integer | ❌ | 1 | Number of images to generate |
+| `aspect_ratio` | enum | ❌ | auto | Aspect ratio of the generated image |
+| `resolution` | enum | ❌ | 1K | Resolution of the image |
+| `output_format` | enum | ❌ | png | Output format (jpeg, png, webp) |
+| `seed` | integer | ❌ | random | Random seed for reproducibility |
+| `enable_web_search` | boolean | ❌ | false | Enable web search for latest info |
+| `limit_generations` | boolean | ❌ | true | Limit generations to 1 per round |
+| `safety_tolerance` | enum | ❌ | 4 | Content moderation (1-6, 1=strict) |
+| `sync_mode` | boolean | ❌ | false | Return as data URI |
 
-### Aspect Ratio Options
+### Aspect Ratios
 
 - `auto` - Let model decide based on prompt
-- `21:9` - Ultra-wide
+- `21:9` - Ultrawide
 - `16:9` - Widescreen
 - `3:2` - Classic photo
 - `4:3` - Standard
-- `5:4` - Portrait
+- `5:4` - Portrait standard
 - `1:1` - Square
 - `4:5` - Portrait
-- `3:4` - Portrait
-- `2:3` - Portrait
-- `9:16` - Vertical video
+- `3:4` - Portrait tall
+- `2:3` - Portrait taller
+- `9:16` - Vertical (mobile)
 
-### Resolution Options
+### Resolutions
 
-- `0.5K` - 512px (fastest)
+- `0.5K` - 512px
 - `1K` - 1024px (default)
-- `2K` - 2048px (high quality)
-- `4K` - 4096px (highest quality)
-
-### Output Format Options
-
-- `png` - Lossless, larger files
-- `jpeg` - Lossy, smaller files
-- `webp` - Modern format, good compression
+- `2K` - 2048px
+- `4K` - 4096px
 
 ## Output Schema
 
@@ -64,37 +59,83 @@ export FAL_KEY="your-api-key"
       "url": "https://...",
       "content_type": "image/png",
       "file_name": "nano-banana-2-t2i-output.png",
+      "file_size": 1234567,
       "width": 1024,
       "height": 1024
     }
   ],
-  "description": "Optional description"
+  "description": ""
 }
 ```
 
-## Example Request
+## Queue-Based Workflow
+
+The API uses a queue-based system:
+
+1. **Submit request** → Get `request_id`
+2. **Poll status** → Check `status` field
+3. **Get result** → When `status === "COMPLETED"`
+
+### Status Values
+
+- `IN_QUEUE` - Waiting in queue
+- `IN_PROGRESS` - Being processed
+- `COMPLETED` - Done, ready to fetch
+- `FAILED` - Error occurred
+
+## Example Request (JavaScript)
+
+```javascript
+import { fal } from "@fal-ai/client";
+
+const result = await fal.subscribe("fal-ai/nano-banana-2", {
+  input: {
+    prompt: "A serene mountain landscape at sunset",
+    aspect_ratio: "16:9",
+    resolution: "2K",
+    num_images: 1
+  }
+});
+
+console.log(result.data.images[0].url);
+```
+
+## Example Request (Python)
 
 ```python
-from fal_client import client
+import httpx
 
-result = client.subscribe(
-    "fal-ai/nano-banana-2",
-    input={
-        "prompt": "A serene mountain landscape at sunset",
-        "aspect_ratio": "16:9",
-        "resolution": "2K",
-    },
-)
+api_key = "YOUR_FAL_KEY"
+url = "https://queue.fal.run/fal-ai/nano-banana-2"
 
-for img in result["images"]:
-    print(img["url"])
+headers = {
+    "Authorization": f"Key {api_key}",
+    "Content-Type": "application/json"
+}
+
+payload = {
+    "prompt": "A serene mountain landscape at sunset",
+    "aspect_ratio": "16:9",
+    "resolution": "2K"
+}
+
+response = httpx.post(url, headers=headers, json=payload)
+result = response.json()
+print(result["images"][0]["url"])
 ```
+
+## Error Handling
+
+| Status Code | Description |
+|-------------|-------------|
+| 400 | Invalid request parameters |
+| 401 | Invalid or missing API key |
+| 429 | Rate limit exceeded |
+| 500 | Server error |
 
 ## Rate Limits
 
-- Free tier: Limited requests per day
-- Paid tier: Higher limits
+- Free tier: Limited requests per minute
+- Paid tier: Higher limits available
 
-## Pricing
-
-Check fal.ai for current pricing.
+Check fal.ai pricing for current limits.
