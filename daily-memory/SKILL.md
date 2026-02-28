@@ -40,11 +40,36 @@ description: "Add daily reports to VitePress repository. Use when: (1) adding da
 
 ## Commands
 
+```bash
+# 新しい日報を追加
+uv run scripts/daily_memory.py add \
+  --completed "タスクA,タスクB" \
+  --in-progress "タスクC" \
+  --notes "気づき" \
+  --tags "#AGI #開発" \
+  --continue  # 前回リンクを自動追加
+
+# トピックを追加
+uv run scripts/daily_memory.py add-topic "トピック名" \
+  --content "内容" \
+  --date "2026-03-01"
+
+# 目次を更新
+uv run scripts/daily_memory.py update-toc
+
+# タグで検索
+uv run scripts/daily_memory.py search-tags "#AGI"
+
+# コミット＆プッシュ
+uv run scripts/daily_memory.py commit
+```
+
 | コマンド | 説明 |
 |---------|------|
 | `add` | 新しい日報を追加 |
 | `add-topic` | 既存の日報にトピックを追加 |
-| `update-config` | config.tsのサイドバーを更新 |
+| `update-toc` | 目次を更新 |
+| `search-tags` | タグで検索 |
 | `commit` | 変更をcommit & push |
 
 ## Repository
