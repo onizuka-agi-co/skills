@@ -1,6 +1,6 @@
 ---
 name: sunwood-community
-description: "Sunwood AI OSS Hub (https://x.com/i/communities/2010195061309587967) への投稿専用スキル。引用リツイート投稿や解説付き投稿に使用。"
+description: "Sunwood AI OSS Hub (https://x.com/i/communities/2010195061309587967) への投稿専用スキル。引用リツイート投稿や解説付き投稿に使用。AIによる自動解説生成、文脈理解機能を搭載。"
 ---
 
 # Sunwood Community - Sunwood AI OSS Hub 投稿スキル
@@ -15,8 +15,11 @@ Sunwood AI OSS Hub コミュニティへの投稿専用。
 # 引用リツイート（解説付き）
 uv run skills/sunwood-community/scripts/quote_to_community.py <ポストURL> "解説文"
 
-# 例
-uv run skills/sunwood-community/scripts/quote_to_community.py https://x.com/user/status/123 "これは面白い記事です！"
+# AI解説生成（文脈理解付き）
+uv run skills/sunwood-community/scripts/ai_quote_generator.py <ポストURL>
+
+# プレビューのみ
+uv run skills/sunwood-community/scripts/ai_quote_generator.py <ポストURL> --preview
 ```
 
 ## ログ保存
