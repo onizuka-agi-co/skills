@@ -3,52 +3,57 @@
 ## Endpoint
 
 ```
-POST https://queue.fal.run/fal-ai/nano-banana-2
+fal-ai/nano-banana-2
 ```
 
 ## Authentication
 
-Include API key in Authorization header:
+Set `FAL_KEY` environment variable or create `~/fal-key.txt` file.
 
-```python
-headers = {
-    "Authorization": f"Key {FAL_KEY}",
-    "Content-Type": "application/json",
-}
+```bash
+export FAL_KEY="your-api-key"
 ```
 
 ## Input Schema
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `prompt` | string | Yes | - | Text prompt for image generation |
-| `num_images` | integer | No | 1 | Number of images to generate |
-| `aspect_ratio` | enum | No | auto | Aspect ratio of generated image |
-| `resolution` | enum | No | 1K | Resolution of generated image |
-| `output_format` | enum | No | png | Output format (jpeg, png, webp) |
+| `prompt` | string | Yes | - | Text description of the image |
+| `num_images` | integer | No | 1 | Number of images to generate (1-4) |
+| `aspect_ratio` | enum | No | auto | Aspect ratio |
+| `resolution` | enum | No | 1K | Resolution quality |
+| `output_format` | enum | No | png | Output image format |
 | `seed` | integer | No | random | Random seed for reproducibility |
-| `enable_web_search` | boolean | No | false | Enable web search for latest info |
-| `safety_tolerance` | enum | No | 4 | Content moderation (1-6, 1=strict) |
+| `enable_web_search` | boolean | No | false | Enable web search for up-to-date info |
+| `safety_tolerance` | enum | No | 4 | Content moderation (1-6) |
 | `sync_mode` | boolean | No | false | Return as data URI |
-| `limit_generations` | boolean | No | true | Limit to 1 generation per prompt |
 
 ### Aspect Ratio Options
 
-```
-auto, 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16
-```
+- `auto` - Let model decide based on prompt
+- `21:9` - Ultra-wide
+- `16:9` - Widescreen
+- `3:2` - Classic photo
+- `4:3` - Standard
+- `5:4` - Portrait
+- `1:1` - Square
+- `4:5` - Portrait
+- `3:4` - Portrait
+- `2:3` - Portrait
+- `9:16` - Vertical video
 
 ### Resolution Options
 
-```
-0.5K, 1K, 2K, 4K
-```
+- `0.5K` - 512px (fastest)
+- `1K` - 1024px (default)
+- `2K` - 2048px (high quality)
+- `4K` - 4096px (highest quality)
 
 ### Output Format Options
 
-```
-jpeg, png, webp
-```
+- `png` - Lossless, larger files
+- `jpeg` - Lossy, smaller files
+- `webp` - Modern format, good compression
 
 ## Output Schema
 
@@ -63,78 +68,33 @@ jpeg, png, webp
       "height": 1024
     }
   ],
-  "description": "Description of generated images"
+  "description": "Optional description"
 }
 ```
 
-## Request Flow
-
-1. **Submit request** → Get `request_id`
-2. **Poll status** → Wait for `COMPLETED`
-3. **Get result** → Download images
-
-### Submit Request
+## Example Request
 
 ```python
-import requests
+from fal_client import client
 
-response = requests.post(
-    "https://queue.fal.run/fal-ai/nano-banana-2",
-    headers={"Authorization": f"Key {FAL_KEY}"},
-    json={
-        "prompt": "A beautiful sunset over mountains",
+result = client.subscribe(
+    "fal-ai/nano-banana-2",
+    input={
+        "prompt": "A serene mountain landscape at sunset",
         "aspect_ratio": "16:9",
         "resolution": "2K",
-    }
+    },
 )
 
-request_id = response.json()["request_id"]
+for img in result["images"]:
+    print(img["url"])
 ```
-
-### Get Result
-
-```python
-response = requests.get(
-    f"https://queue.fal.run/fal-ai/nano-banana-2/requests/{request_id}",
-    headers={"Authorization": f"Key {FAL_KEY}"}
-)
-
-result = response.json()
-# Check status: IN_QUEUE, IN_PROGRESS, COMPLETED, FAILED
-```
-
-## Using fal.ai Client
-
-```javascript
-import { fal } from "@fal-ai/client";
-
-// Configure
-fal.config({ credentials: "YOUR_FAL_KEY" });
-
-// Generate
-const result = await fal.subscribe("fal-ai/nano-banana-2", {
-  input: {
-    prompt: "A serene mountain landscape",
-    aspect_ratio: "16:9",
-    resolution: "2K",
-  },
-});
-
-console.log(result.data.images[0].url);
-```
-
-## Error Handling
-
-| Status | Description |
-|--------|-------------|
-| 400 | Invalid request parameters |
-| 401 | Invalid or missing API key |
-| 403 | Rate limit exceeded |
-| 500 | Server error |
 
 ## Rate Limits
 
-- Basic tier: Limited requests per minute
-- Pro tier: Higher limits
+- Free tier: Limited requests per day
+- Paid tier: Higher limits
 
-Check fal.ai dashboard for current limits.
+## Pricing
+
+Check fal.ai for current pricing.

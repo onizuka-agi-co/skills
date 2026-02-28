@@ -1,265 +1,185 @@
 #!/usr/bin/env python3
 """
-nano-banana-2 Image Generator
-Generate images from text prompts using fal.ai's nano-banana-2 model.
+Nano Banana 2 - Image Generation Script
+
+Usage:
+    uv run generate.py --prompt "A serene mountain landscape"
+    uv run generate.py --prompt "..." --aspect-ratio 16:9 --resolution 2K
 """
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 try:
-    import requests
+    from fal_client import client
 except ImportError:
-    print("Installing requests...")
+    print("Installing fal-client...")
     import subprocess
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-    import requests
+    subprocess.run(["uv", "pip", "install", "fal-client"], check=True)
+    from fal_client import client
+
+# 設定
+TOKEN_FILE = Path(__file__).parent.parent.parent.parent / "fal-key.txt"
+OUTPUT_DIR = Path(__file__).parent.parent / "output"
 
 
-# fal.ai API endpoint
-FAL_API_URL = "https://queue.fal.run/fal-ai/nano-banana-2"
-FAL_RESULT_URL = "https://queue.fal.run/fal-ai/nano-banana-2/requests"
+def load_api_key() -> str:
+    """API Keyを読み込む"""
+    # 環境変数から取得
+    import os
+    key = os.environ.get("FAL_KEY")
+    if key:
+        return key
+    
+    # ファイルから取得
+    if TOKEN_FILE.exists():
+        with open(TOKEN_FILE) as f:
+            return f.read().strip()
+    
+    raise ValueError("FAL_KEY not found. Set FAL_KEY environment variable or create ~/fal-key.txt")
 
 
-def get_api_key() -> str:
-    """Get FAL API key from environment or file."""
-    # Try environment variable first
-    api_key = os.environ.get("FAL_KEY")
-    if api_key:
-        return api_key
-
-    # Try workspace directory
-    key_file = Path(__file__).parent.parent.parent / "fal-key.txt"
-    if key_file.exists():
-        return key_file.read_text().strip()
-
-    # Try home directory
-    key_file = Path.home() / "fal-key.txt"
-    if key_file.exists():
-        return key_file.read_text().strip()
-
-    raise ValueError(
-        "FAL API key not found. Set FAL_KEY environment variable "
-        "or create fal-key.txt in workspace or home directory."
-    )
-
-
-def submit_request(
-    api_key: str,
+def generate_image(
     prompt: str,
     num_images: int = 1,
     aspect_ratio: str = "auto",
     resolution: str = "1K",
     output_format: str = "png",
-    seed: Optional[int] = None,
+    seed: int = None,
     enable_web_search: bool = False,
-) -> str:
-    """Submit image generation request to fal.ai."""
-    headers = {
-        "Authorization": f"Key {api_key}",
-        "Content-Type": "application/json",
-    }
-
-    payload = {
+) -> dict:
+    """画像を生成"""
+    
+    api_key = load_api_key()
+    
+    # 入力パラメータ構築
+    input_data = {
         "prompt": prompt,
         "num_images": num_images,
         "aspect_ratio": aspect_ratio,
         "resolution": resolution,
         "output_format": output_format,
-        "enable_web_search": enable_web_search,
     }
-
+    
     if seed is not None:
-        payload["seed"] = seed
-
-    response = requests.post(
-        FAL_API_URL,
-        headers=headers,
-        json=payload,
+        input_data["seed"] = seed
+    if enable_web_search:
+        input_data["enable_web_search"] = True
+    
+    print(f"🎨 Generating image...")
+    print(f"   Prompt: {prompt[:100]}...")
+    print(f"   Aspect: {aspect_ratio}, Resolution: {resolution}")
+    
+    # API呼び出し
+    result = client.subscribe(
+        "fal-ai/nano-banana-2",
+        input=input_data,
+        logs=True,
     )
-
-    if response.status_code != 200:
-        raise Exception(f"API request failed: {response.status_code} - {response.text}")
-
-    data = response.json()
-    return data["request_id"]
+    
+    return result
 
 
-def get_result(api_key: str, request_id: str) -> dict:
-    """Get the result of a submitted request."""
-    headers = {
-        "Authorization": f"Key {api_key}",
-    }
-
-    response = requests.get(
-        f"{FAL_RESULT_URL}/{request_id}",
-        headers=headers,
-    )
-
-    if response.status_code != 200:
-        raise Exception(f"Failed to get result: {response.status_code} - {response.text}")
-
-    return response.json()
-
-
-def wait_for_result(
-    api_key: str,
-    request_id: str,
-    timeout: int = 300,
-    poll_interval: int = 2,
-) -> dict:
-    """Wait for the request to complete and return the result."""
-    import time
-
-    start_time = time.time()
-
-    while time.time() - start_time < timeout:
-        status = get_result(api_key, request_id)
-
-        if status.get("status") == "COMPLETED":
-            return status.get("result", {})
-
-        if status.get("status") == "FAILED":
-            raise Exception(f"Request failed: {status}")
-
-        time.sleep(poll_interval)
-
-    raise TimeoutError(f"Request timed out after {timeout} seconds")
-
-
-def download_image(url: str, output_path: Path) -> Path:
-    """Download image from URL to local file."""
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
-
-    with open(output_path, "wb") as f:
-        for chunk in response.iter_content(chunk_size=8192):
-            f.write(chunk)
-
-    return output_path
+def save_images(result: dict, output_dir: Path = OUTPUT_DIR):
+    """画像を保存"""
+    import httpx
+    
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    images = result.get("images", [])
+    saved_paths = []
+    
+    for i, img in enumerate(images):
+        url = img.get("url")
+        if not url:
+            continue
+        
+        # 画像をダウンロード
+        with httpx.Client() as client:
+            resp = client.get(url)
+            resp.raise_for_status()
+        
+        # ファイル名生成
+        content_type = img.get("content_type", "image/png")
+        ext = content_type.split("/")[-1]
+        filename = f"nano-banana-2-{i+1}.{ext}"
+        filepath = output_dir / filename
+        
+        # 保存
+        with open(filepath, "wb") as f:
+            f.write(resp.content)
+        
+        saved_paths.append(filepath)
+        print(f"💾 Saved: {filepath}")
+    
+    return saved_paths
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate images from text prompts using fal.ai nano-banana-2"
-    )
+    parser = argparse.ArgumentParser(description="Generate images with nano-banana-2")
+    parser.add_argument("--prompt", required=True, help="Text prompt for image generation")
+    parser.add_argument("--num-images", type=int, default=1, help="Number of images to generate")
     parser.add_argument(
-        "--prompt", "-p",
-        required=True,
-        help="Text prompt for image generation",
-    )
-    parser.add_argument(
-        "--num-images", "-n",
-        type=int,
-        default=1,
-        help="Number of images to generate (default: 1)",
-    )
-    parser.add_argument(
-        "--aspect-ratio", "-a",
-        default="auto",
+        "--aspect-ratio",
         choices=["auto", "21:9", "16:9", "3:2", "4:3", "5:4", "1:1", "4:5", "3:4", "2:3", "9:16"],
-        help="Aspect ratio (default: auto)",
+        default="auto",
+        help="Aspect ratio",
     )
     parser.add_argument(
-        "--resolution", "-r",
-        default="1K",
+        "--resolution",
         choices=["0.5K", "1K", "2K", "4K"],
-        help="Resolution (default: 1K)",
+        default="1K",
+        help="Resolution",
     )
     parser.add_argument(
-        "--output-format", "-f",
-        default="png",
+        "--output-format",
         choices=["jpeg", "png", "webp"],
-        help="Output format (default: png)",
+        default="png",
+        help="Output format",
     )
-    parser.add_argument(
-        "--seed", "-s",
-        type=int,
-        help="Random seed for reproducibility",
-    )
-    parser.add_argument(
-        "--enable-web-search",
-        action="store_true",
-        help="Enable web search for up-to-date info",
-    )
-    parser.add_argument(
-        "--output-dir", "-o",
-        type=Path,
-        default=Path("."),
-        help="Output directory for downloaded images (default: current directory)",
-    )
-    parser.add_argument(
-        "--download", "-d",
-        action="store_true",
-        help="Download generated images to local files",
-    )
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Output result as JSON",
-    )
-
+    parser.add_argument("--seed", type=int, help="Random seed for reproducibility")
+    parser.add_argument("--web-search", action="store_true", help="Enable web search")
+    parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR, help="Output directory")
+    parser.add_argument("--url-only", action="store_true", help="Print URLs only, don't download")
+    
     args = parser.parse_args()
-
+    
     try:
-        api_key = get_api_key()
-    except ValueError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
-
-    print(f"Submitting request: {args.prompt[:50]}...")
-
-    request_id = submit_request(
-        api_key=api_key,
-        prompt=args.prompt,
-        num_images=args.num_images,
-        aspect_ratio=args.aspect_ratio,
-        resolution=args.resolution,
-        output_format=args.output_format,
-        seed=args.seed,
-        enable_web_search=args.enable_web_search,
-    )
-
-    print(f"Request ID: {request_id}")
-    print("Waiting for result...")
-
-    result = wait_for_result(api_key, request_id)
-
-    images = result.get("images", [])
-    description = result.get("description", "")
-
-    if args.json:
-        output = {
-            "request_id": request_id,
-            "prompt": args.prompt,
-            "images": images,
-            "description": description,
-        }
-        print(json.dumps(output, indent=2))
-    else:
-        print(f"\nGenerated {len(images)} image(s):")
-        for i, img in enumerate(images, 1):
-            print(f"  {i}. {img['url']}")
-
+        # 画像生成
+        result = generate_image(
+            prompt=args.prompt,
+            num_images=args.num_images,
+            aspect_ratio=args.aspect_ratio,
+            resolution=args.resolution,
+            output_format=args.output_format,
+            seed=args.seed,
+            enable_web_search=args.web_search,
+        )
+        
+        # 結果表示
+        images = result.get("images", [])
+        description = result.get("description", "")
+        
+        print(f"\n✅ Generated {len(images)} image(s)")
         if description:
-            print(f"\nDescription: {description}")
-
-    if args.download and images:
-        args.output_dir.mkdir(parents=True, exist_ok=True)
-
-        print(f"\nDownloading images to {args.output_dir}...")
-        for i, img in enumerate(images, 1):
-            url = img["url"]
-            ext = args.output_format
-            filename = f"nano-banana-2-{request_id[:8]}-{i}.{ext}"
-            output_path = args.output_dir / filename
-
-            download_image(url, output_path)
-            print(f"  Downloaded: {output_path}")
+            print(f"   Description: {description}")
+        
+        # URL表示
+        for i, img in enumerate(images):
+            url = img.get("url")
+            if url:
+                print(f"   Image {i+1}: {url}")
+        
+        # 画像保存
+        if not args.url_only:
+            saved = save_images(result, args.output_dir)
+            print(f"\n📁 Saved to: {args.output_dir}")
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
