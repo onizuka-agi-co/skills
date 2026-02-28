@@ -151,3 +151,7 @@ uv run skills/sunwood-community/scripts/x_community_quote.py preview <URL> "解�
 
 - `community_id` + `quote_tweet_id` の併用は403エラー（API制限）
 - URLをテキストに含める形式で投稿（引用カードとして表示）
+
+## ハッシュタグルール
+
+投稿時のハッシュタグは **#ONIZUKA_AGI** のみ使用する。
