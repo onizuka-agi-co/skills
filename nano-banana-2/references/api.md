@@ -1,4 +1,4 @@
-# Nano Banana 2 API Reference
+# nano-banana-2 API Reference
 
 ## Endpoint
 
@@ -8,49 +8,47 @@ fal-ai/nano-banana-2
 
 ## Authentication
 
-Set `FAL_KEY` environment variable or pass credentials directly:
+Set the `FAL_KEY` environment variable:
 
-```python
-from fal_client import AsyncClient
-
-client = AsyncClient(credentials="YOUR_FAL_KEY")
+```bash
+export FAL_KEY="your-api-key"
 ```
 
 ## Input Schema
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `prompt` | string | ✅ | - | Text description of the image to generate |
-| `num_images` | integer | - | 1 | Number of images to generate |
-| `seed` | integer | - | random | Random seed for reproducibility |
-| `aspect_ratio` | enum | - | auto | Aspect ratio of generated image |
-| `output_format` | enum | - | png | Output format: jpeg, png, webp |
-| `safety_tolerance` | enum | - | 4 | Content moderation level (1-6) |
-| `sync_mode` | boolean | - | false | Return as data URI |
-| `resolution` | enum | - | 1K | Resolution: 0.5K, 1K, 2K, 4K |
-| `limit_generations` | boolean | - | true | Limit to 1 generation per prompt |
-| `enable_web_search` | boolean | - | false | Enable web search for latest info |
+| `prompt` | string | ✅ | - | Text prompt for image generation |
+| `num_images` | integer | ❌ | 1 | Number of images to generate |
+| `aspect_ratio` | enum | ❌ | auto | Aspect ratio of generated image |
+| `resolution` | enum | ❌ | 1K | Resolution of generated image |
+| `output_format` | enum | ❌ | png | Output format (jpeg/png/webp) |
+| `seed` | integer | ❌ | random | Random seed for reproducibility |
+| `enable_web_search` | boolean | ❌ | false | Enable web search for current info |
+| `safety_tolerance` | enum | ❌ | 4 | Content moderation (1-6, 1=strict) |
+| `sync_mode` | boolean | ❌ | false | Return as data URI |
+| `limit_generations` | boolean | ❌ | true | Limit to 1 generation per round |
 
 ### Aspect Ratios
 
 - `auto` - Let model decide based on prompt
-- `21:9` - Ultra-wide
+- `21:9` - Ultrawide
 - `16:9` - Widescreen
 - `3:2` - Classic photo
 - `4:3` - Standard
 - `5:4` - Near square
 - `1:1` - Square
-- `4:5` - Portrait
-- `3:4` - Portrait
-- `2:3` - Portrait
-- `9:16` - Mobile/portrait
+- `4:5` - Portrait near square
+- `3:4` - Portrait standard
+- `2:3` - Portrait photo
+- `9:16` - Vertical video
 
 ### Resolutions
 
-- `0.5K` - 512px (fastest)
-- `1K` - 1024px (default)
-- `2K` - 2048px (high quality)
-- `4K` - 4096px (highest quality)
+- `0.5K` - 512px
+- `1K` - 1024px
+- `2K` - 2048px
+- `4K` - 4096px
 
 ## Output Schema
 
@@ -61,67 +59,103 @@ client = AsyncClient(credentials="YOUR_FAL_KEY")
       "url": "https://...",
       "content_type": "image/png",
       "file_name": "nano-banana-2-t2i-output.png",
-      "file_size": 123456,
+      "file_size": 1234567,
       "width": 1024,
       "height": 1024
     }
   ],
-  "description": ""
+  "description": "Generated image description"
 }
 ```
 
-## Python Example
+## Client Usage
 
-```python
-import asyncio
-from fal_client import AsyncClient
+### JavaScript/TypeScript
 
-async def generate():
-    client = AsyncClient(credentials="YOUR_FAL_KEY")
-
-    result = await client.subscribe(
-        "fal-ai/nano-banana-2",
-        input={
-            "prompt": "A serene mountain landscape at sunset",
-            "aspect_ratio": "16:9",
-            "resolution": "2K",
-            "num_images": 1,
-        }
-    )
-
-    for img in result["images"]:
-        print(f"Image URL: {img['url']}")
-
-asyncio.run(generate())
-```
-
-## TypeScript Example
-
-```typescript
+```javascript
 import { fal } from "@fal-ai/client";
 
 const result = await fal.subscribe("fal-ai/nano-banana-2", {
   input: {
-    prompt: "A cyberpunk city at night",
-    aspect_ratio: "21:9",
-    resolution: "4K",
-  },
+    prompt: "A serene mountain landscape at sunset",
+    aspect_ratio: "16:9",
+    resolution: "2K"
+  }
 });
 
 console.log(result.data.images[0].url);
 ```
 
+### Python
+
+```python
+from fal_client import client
+
+result = client.subscribe(
+    "fal-ai/nano-banana-2",
+    input={
+        "prompt": "A serene mountain landscape at sunset",
+        "aspect_ratio": "16:9",
+        "resolution": "2K"
+    }
+)
+
+print(result["images"][0]["url"])
+```
+
+### Queue-based (async)
+
+```python
+# Submit request
+response = client.queue.submit(
+    "fal-ai/nano-banana-2",
+    input={"prompt": "..."}
+)
+request_id = response["request_id"]
+
+# Check status
+status = client.queue.status(
+    "fal-ai/nano-banana-2",
+    request_id=request_id
+)
+
+# Get result when complete
+result = client.queue.result(
+    "fal-ai/nano-banana-2",
+    request_id=request_id
+)
+```
+
 ## Error Handling
 
-Common errors:
-- `401 Unauthorized` - Invalid or missing API key
-- `429 Too Many Requests` - Rate limit exceeded
-- `500 Internal Server Error` - Model error, retry
+| Error | Cause | Solution |
+|-------|-------|----------|
+| 401 | Invalid API key | Check FAL_KEY environment variable |
+| 429 | Rate limit exceeded | Wait and retry |
+| 500 | Server error | Retry with exponential backoff |
 
-## Rate Limits
+## Best Practices
 
-Check fal.ai dashboard for current rate limits.
+1. **Prompt Engineering**
+   - Be specific and descriptive
+   - Include style, mood, lighting details
+   - Avoid ambiguous terms
 
-## Cost
+2. **Resolution Selection**
+   - 0.5K: Quick previews
+   - 1K: General use (default)
+   - 2K: High quality images
+   - 4K: Print/large display
 
-Check fal.ai pricing page for current pricing.
+3. **Aspect Ratio**
+   - Use `auto` for natural composition
+   - Match intended display format
+
+4. **Seed Usage**
+   - Set seed for reproducibility
+   - Vary seed for variations on same prompt
+
+## Pricing
+
+See fal.ai pricing page for current rates:
+https://fal.ai/pricing
