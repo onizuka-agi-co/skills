@@ -1,8 +1,4 @@
-# Nano Banana 2 API Reference
-
-## Overview
-
-Nano Banana 2 is a text-to-image model by fal.ai that generates images from text descriptions.
+# nano-banana-2 API Reference
 
 ## Endpoint
 
@@ -12,73 +8,85 @@ POST https://queue.fal.run/fal-ai/nano-banana-2
 
 ## Authentication
 
-Set the `FAL_KEY` environment variable:
-
-```bash
-export FAL_KEY="your-api-key"
-```
-
-Include in request header:
+Include API key in Authorization header:
 
 ```
 Authorization: Key YOUR_FAL_KEY
 ```
 
-## Input Schema
+## Request Schema
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `prompt` | string | Yes | - | Text prompt for image generation |
-| `num_images` | integer | No | 1 | Number of images to generate |
-| `aspect_ratio` | enum | No | auto | Aspect ratio of the image |
-| `resolution` | enum | No | 1K | Resolution of the image |
-| `output_format` | enum | No | png | Output format |
-| `seed` | integer | No | random | Random seed for reproducibility |
-| `enable_web_search` | boolean | No | false | Enable web search |
-| `safety_tolerance` | enum | No | 4 | Content moderation level (1-6) |
-| `limit_generations` | boolean | No | true | Limit generations to 1 |
-| `sync_mode` | boolean | No | false | Return as data URI |
+```json
+{
+  "prompt": "string (required)",
+  "num_images": 1,
+  "aspect_ratio": "auto",
+  "resolution": "1K",
+  "output_format": "png",
+  "safety_tolerance": "4",
+  "seed": null,
+  "enable_web_search": false,
+  "limit_generations": true
+}
+```
 
-### Aspect Ratio Options
+## Parameters
 
-- `auto` - Let the model decide
-- `21:9` - Ultrawide
-- `16:9` - Widescreen
-- `3:2` - Classic photo
-- `4:3` - Standard
-- `5:4` - Portrait standard
-- `1:1` - Square
-- `4:5` - Portrait
-- `3:4` - Portrait
-- `2:3` - Portrait
-- `9:16` - Vertical (mobile)
+### prompt (required)
+- Type: string
+- Description: Text description of the image to generate
 
-### Resolution Options
+### num_images
+- Type: integer
+- Default: 1
+- Description: Number of images to generate
 
-- `0.5K` - 512px
-- `1K` - 1024px
-- `2K` - 2048px
-- `4K` - 4096px
+### aspect_ratio
+- Type: enum
+- Default: "auto"
+- Options: auto, 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16
+- Description: Aspect ratio of generated image
 
-### Output Format Options
+### resolution
+- Type: enum
+- Default: "1K"
+- Options: 0.5K, 1K, 2K, 4K
+- Description: Resolution of generated image
 
-- `jpeg` - JPEG format
-- `png` - PNG format (lossless)
-- `webp` - WebP format
+### output_format
+- Type: enum
+- Default: "png"
+- Options: jpeg, png, webp
+- Description: Output format of generated image
 
-### Safety Tolerance
+### safety_tolerance
+- Type: enum
+- Default: "4"
+- Options: 1, 2, 3, 4, 5, 6
+- Description: Content moderation level (1=strict, 6=permissive)
 
-- `1` - Most strict (blocks most content)
-- `2-5` - Moderate levels
-- `6` - Least strict
+### seed
+- Type: integer
+- Default: random
+- Description: Random seed for reproducibility
 
-## Output Schema
+### enable_web_search
+- Type: boolean
+- Default: false
+- Description: Enable web search for up-to-date information
+
+### limit_generations
+- Type: boolean
+- Default: true
+- Description: Limit generations to 1 per prompt round
+
+## Response Schema
 
 ```json
 {
   "images": [
     {
-      "url": "https://storage.googleapis.com/...",
+      "url": "https://...",
       "content_type": "image/png",
       "file_name": "nano-banana-2-t2i-output.png",
       "file_size": 123456,
@@ -86,67 +94,44 @@ Authorization: Key YOUR_FAL_KEY
       "height": 1024
     }
   ],
-  "description": "Description of generated images"
+  "description": ""
 }
 ```
 
-## Example Request
+## Example Requests
 
-```python
-import requests
+### Basic
+```bash
+curl -X POST https://queue.fal.run/fal-ai/nano-banana-2 \
+  -H "Authorization: Key YOUR_FAL_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "A beautiful sunset over mountains"}'
+```
 
-headers = {
-    "Authorization": "Key YOUR_FAL_KEY",
-    "Content-Type": "application/json",
-}
-
-payload = {
-    "prompt": "A serene mountain landscape at sunset with a lake reflection",
-    "num_images": 1,
+### With Options
+```bash
+curl -X POST https://queue.fal.run/fal-ai/nano-banana-2 \
+  -H "Authorization: Key YOUR_FAL_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "A cyberpunk city at night",
     "aspect_ratio": "16:9",
     "resolution": "2K",
-    "output_format": "png"
-}
-
-response = requests.post(
-    "https://queue.fal.run/fal-ai/nano-banana-2",
-    headers=headers,
-    json=payload
-)
-
-result = response.json()
-print(result["images"][0]["url"])
+    "num_images": 2
+  }'
 ```
 
-## JavaScript/TypeScript Client
+## Error Responses
 
-```typescript
-import { fal } from "@fal-ai/client";
+### 401 Unauthorized
+Invalid or missing API key.
 
-const result = await fal.subscribe("fal-ai/nano-banana-2", {
-  input: {
-    prompt: "A serene mountain landscape at sunset",
-    aspect_ratio: "16:9",
-    resolution: "2K",
-  },
-});
+### 402 Payment Required
+API quota exceeded.
 
-console.log(result.data.images[0].url);
-```
-
-## Error Handling
-
-Common errors:
-
-- `401 Unauthorized` - Invalid or missing API key
-- `400 Bad Request` - Invalid parameters
-- `429 Too Many Requests` - Rate limit exceeded
-- `500 Internal Server Error` - Server-side error
+### 400 Bad Request
+Invalid request parameters.
 
 ## Rate Limits
 
-Refer to fal.ai documentation for current rate limits.
-
-## Pricing
-
-Refer to fal.ai pricing page for current pricing.
+Refer to fal.ai pricing page for current rate limits.
