@@ -1,24 +1,35 @@
 #!/usr/bin/env python3
 """
-nano-banana-2 Image Generator
-
-Generate images from text prompts using fal.ai's nano-banana-2 model.
-Uses HTTP requests directly (no fal-client dependency).
+Generate images using fal.ai's nano-banana-2 model.
 
 Usage:
-    python3 generate.py --prompt "A serene mountain landscape"
-    python3 generate.py --prompt "cyberpunk city" --aspect-ratio 16:9 --resolution 2K
+    uv run generate.py --prompt "A serene mountain landscape"
+    uv run generate.py --prompt "A cyberpunk city" --aspect-ratio 16:9 --resolution 2K
 """
 
 import argparse
 import json
 import os
 import sys
-import time
-import urllib.request
-import urllib.error
 from pathlib import Path
 from typing import Optional
+
+try:
+    import requests
+except ImportError:
+    print("Installing requests...")
+    import subprocess
+    subprocess.run(["uv", "pip", "install", "requests"], check=True)
+    import requests
+
+
+# API endpoint
+FAL_API_URL = "https://queue.fal.run/fal-ai/nano-banana-2"
+
+# Valid options
+ASPECT_RATIOS = ["auto", "21:9", "16:9", "3:2", "4:3", "5:4", "1:1", "4:5", "3:4", "2:3", "9:16"]
+RESOLUTIONS = ["0.5K", "1K", "2K", "4K"]
+OUTPUT_FORMATS = ["jpeg", "png", "webp"]
 
 
 def get_api_key() -> str:
@@ -39,69 +50,12 @@ def get_api_key() -> str:
         return home_key.read_text().strip()
 
     raise ValueError(
-        "FAL API key not found. Set FAL_KEY environment variable "
-        "or create ~/fal-key.txt"
+        "FAL API key not found. Set FAL_KEY environment variable or create fal-key.txt"
     )
 
 
-def fal_request(
-    endpoint: str,
+def submit_request(
     api_key: str,
-    data: dict,
-    method: str = "POST"
-) -> dict:
-    """Make request to fal.ai API."""
-    url = f"https://queue.fal.run/{endpoint}"
-
-    headers = {
-        "Authorization": f"Key {api_key}",
-        "Content-Type": "application/json",
-    }
-
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(data).encode("utf-8"),
-        headers=headers,
-        method=method
-    )
-
-    try:
-        with urllib.request.urlopen(req, timeout=300) as response:
-            return json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode("utf-8")
-        raise RuntimeError(f"API error {e.code}: {error_body}")
-
-
-def fal_status(endpoint: str, api_key: str, request_id: str) -> dict:
-    """Check status of async request."""
-    url = f"https://queue.fal.run/{endpoint}/requests/{request_id}/status"
-
-    headers = {
-        "Authorization": f"Key {api_key}",
-    }
-
-    req = urllib.request.Request(url, headers=headers)
-
-    with urllib.request.urlopen(req, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
-
-
-def fal_result(endpoint: str, api_key: str, request_id: str) -> dict:
-    """Get result of completed request."""
-    url = f"https://queue.fal.run/{endpoint}/requests/{request_id}"
-
-    headers = {
-        "Authorization": f"Key {api_key}",
-    }
-
-    req = urllib.request.Request(url, headers=headers)
-
-    with urllib.request.urlopen(req, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
-
-
-def generate_image(
     prompt: str,
     num_images: int = 1,
     aspect_ratio: str = "auto",
@@ -110,12 +64,13 @@ def generate_image(
     seed: Optional[int] = None,
     enable_web_search: bool = False,
 ) -> dict:
-    """Generate image(s) from text prompt."""
-    api_key = get_api_key()
-    endpoint = "fal-ai/nano-banana-2"
+    """Submit image generation request to fal.ai."""
+    headers = {
+        "Authorization": f"Key {api_key}",
+        "Content-Type": "application/json",
+    }
 
-    # Build input
-    input_data = {
+    payload = {
         "prompt": prompt,
         "num_images": num_images,
         "aspect_ratio": aspect_ratio,
@@ -125,42 +80,53 @@ def generate_image(
     }
 
     if seed is not None:
-        input_data["seed"] = seed
+        payload["seed"] = seed
+
     if enable_web_search:
-        input_data["enable_web_search"] = True
+        payload["enable_web_search"] = True
 
-    # Submit request
-    print(f"🎨 Generating image: {prompt[:50]}...")
+    response = requests.post(
+        FAL_API_URL,
+        headers=headers,
+        json=payload,
+    )
 
-    # Submit and wait for result
-    submit_response = fal_request(endpoint, api_key, input_data)
-    request_id = submit_response.get("request_id")
+    if response.status_code != 200:
+        raise Exception(f"API request failed: {response.status_code} - {response.text}")
 
-    if not request_id:
-        raise RuntimeError(f"No request_id in response: {submit_response}")
+    return response.json()
 
-    # Poll for completion
-    print(f"⏳ Request ID: {request_id}")
-    max_wait = 300  # 5 minutes max
-    start_time = time.time()
 
-    while time.time() - start_time < max_wait:
-        status = fal_status(endpoint, api_key, request_id)
-        status_code = status.get("status")
+def get_result(api_key: str, request_id: str) -> dict:
+    """Get the result of a submitted request."""
+    headers = {
+        "Authorization": f"Key {api_key}",
+    }
 
-        if status_code == "COMPLETED":
-            return fal_result(endpoint, api_key, request_id)
-        elif status_code == "FAILED":
-            raise RuntimeError(f"Generation failed: {status}")
+    result_url = f"https://queue.fal.run/fal-ai/nano-banana-2/requests/{request_id}/status"
 
-        time.sleep(2)
+    response = requests.get(result_url, headers=headers)
 
-    raise RuntimeError("Timeout waiting for generation")
+    if response.status_code != 200:
+        raise Exception(f"Failed to get status: {response.status_code} - {response.text}")
+
+    return response.json()
+
+
+def download_image(url: str, output_path: Path) -> None:
+    """Download image from URL to local file."""
+    response = requests.get(url)
+    if response.status_code != 200:
+        raise Exception(f"Failed to download image: {response.status_code}")
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_bytes(response.content)
+    print(f"Downloaded: {output_path}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate images using nano-banana-2"
+        description="Generate images using fal.ai's nano-banana-2 model"
     )
     parser.add_argument(
         "--prompt", "-p",
@@ -175,19 +141,19 @@ def main():
     )
     parser.add_argument(
         "--aspect-ratio", "-a",
-        choices=["auto", "21:9", "16:9", "3:2", "4:3", "5:4", "1:1", "4:5", "3:4", "2:3", "9:16"],
+        choices=ASPECT_RATIOS,
         default="auto",
         help="Aspect ratio (default: auto)"
     )
     parser.add_argument(
         "--resolution", "-r",
-        choices=["0.5K", "1K", "2K", "4K"],
+        choices=RESOLUTIONS,
         default="1K",
         help="Resolution (default: 1K)"
     )
     parser.add_argument(
         "--output-format", "-f",
-        choices=["jpeg", "png", "webp"],
+        choices=OUTPUT_FORMATS,
         default="png",
         help="Output format (default: png)"
     )
@@ -202,47 +168,84 @@ def main():
         help="Enable web search for up-to-date information"
     )
     parser.add_argument(
-        "--output", "-o",
-        help="Output directory for downloaded images"
+        "--output-dir", "-o",
+        type=Path,
+        default=Path("generated"),
+        help="Output directory for downloaded images (default: generated)"
+    )
+    parser.add_argument(
+        "--download", "-d",
+        action="store_true",
+        help="Download generated images locally"
     )
     parser.add_argument(
         "--json",
         action="store_true",
-        help="Output result as JSON"
+        help="Output raw JSON response"
     )
 
     args = parser.parse_args()
 
-    # Run generation
-    result = generate_image(
-        prompt=args.prompt,
-        num_images=args.num_images,
-        aspect_ratio=args.aspect_ratio,
-        resolution=args.resolution,
-        output_format=args.output_format,
-        seed=args.seed,
-        enable_web_search=args.enable_web_search,
-    )
+    try:
+        api_key = get_api_key()
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
-    if args.json:
-        print(json.dumps(result, indent=2))
-    else:
+    print(f"Generating {args.num_images} image(s)...")
+    print(f"Prompt: {args.prompt}")
+    print(f"Aspect ratio: {args.aspect_ratio}")
+    print(f"Resolution: {args.resolution}")
+    print(f"Output format: {args.output_format}")
+    print()
+
+    try:
+        # Submit request
+        result = submit_request(
+            api_key=api_key,
+            prompt=args.prompt,
+            num_images=args.num_images,
+            aspect_ratio=args.aspect_ratio,
+            resolution=args.resolution,
+            output_format=args.output_format,
+            seed=args.seed,
+            enable_web_search=args.enable_web_search,
+        )
+
+        if args.json:
+            print(json.dumps(result, indent=2))
+            return
+
+        # Display results
         images = result.get("images", [])
-        print(f"\n✅ Generated {len(images)} image(s):")
-        for img in images:
-            print(f"  📷 {img.get('url', 'N/A')}")
+        description = result.get("description", "")
 
-        if args.output and images:
-            output_dir = Path(args.output)
-            output_dir.mkdir(parents=True, exist_ok=True)
+        print(f"Generated {len(images)} image(s):")
+        print()
 
-            for i, img in enumerate(images, 1):
-                url = img.get("url")
-                if url:
-                    ext = args.output_format
-                    filename = output_dir / f"nano-banana-2-{i}.{ext}"
-                    urllib.request.urlretrieve(url, filename)
-                    print(f"  💾 Saved: {filename}")
+        for i, image in enumerate(images, 1):
+            url = image.get("url", "")
+            width = image.get("width", "?")
+            height = image.get("height", "?")
+            content_type = image.get("content_type", "?")
+
+            print(f"Image {i}:")
+            print(f"  URL: {url}")
+            print(f"  Size: {width}x{height}")
+            print(f"  Type: {content_type}")
+            print()
+
+            if args.download and url:
+                ext = content_type.split("/")[-1] if "/" in content_type else args.output_format
+                output_path = args.output_dir / f"nano-banana-2-{i}.{ext}"
+                download_image(url, output_path)
+
+        if description:
+            print(f"Description: {description}")
+
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
