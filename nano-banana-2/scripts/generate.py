@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 """
-nano-banana-2 Image Generator
+Nano Banana 2 - Image Generation with fal.ai
 
 Generate images from text prompts using fal.ai's nano-banana-2 model.
-
-Usage:
-    uv run generate.py --prompt "A serene mountain landscape"
-    uv run generate.py --prompt "cyberpunk city" --aspect-ratio 16:9 --resolution 2K
 """
 
 import argparse
@@ -15,255 +11,159 @@ import os
 import sys
 from pathlib import Path
 from typing import Optional
+from urllib.request import urlopen, Request
+from urllib.error import HTTPError, URLError
 
-try:
-    import httpx
-except ImportError:
-    print("Error: httpx is required. Install with: uv pip install httpx")
-    sys.exit(1)
-
-
-# fal.ai API endpoints
+# fal.ai API endpoint
 FAL_API_URL = "https://fal.run/fal-ai/nano-banana-2"
 
-# Default settings
-DEFAULT_ASPECT_RATIO = "auto"
-DEFAULT_RESOLUTION = "1K"
-DEFAULT_OUTPUT_FORMAT = "png"
-DEFAULT_NUM_IMAGES = 1
-DEFAULT_SAFETY_TOLERANCE = "4"
+# API key file locations
+API_KEY_FILES = [
+    Path(__file__).parent.parent.parent.parent / "fal-key.txt",
+    Path.home() / ".fal-key.txt",
+]
 
 
-def get_api_key() -> str:
-    """Get FAL API key from environment or file."""
-    # Try environment variable first
-    api_key = os.environ.get("FAL_KEY")
+def get_api_key() -> Optional[str]:
+    """Get fal.ai API key from file or environment."""
+    # Check environment variable
+    key = os.environ.get("FAL_KEY")
+    if key:
+        return key
     
-    if api_key:
-        return api_key
+    # Check key files
+    for key_file in API_KEY_FILES:
+        if key_file.exists():
+            return key_file.read_text().strip()
     
-    # Try workspace file
-    key_file = Path(__file__).parent.parent.parent / "fal-key.txt"
-    if key_file.exists():
-        return key_file.read_text().strip()
-    
-    # Try home directory
-    home_key = Path.home() / "fal-key.txt"
-    if home_key.exists():
-        return home_key.read_text().strip()
-    
-    raise ValueError(
-        "FAL API key not found. Set FAL_KEY environment variable "
-        "or create ~/fal-key.txt"
-    )
+    return None
 
 
 def generate_image(
     prompt: str,
-    num_images: int = DEFAULT_NUM_IMAGES,
-    aspect_ratio: str = DEFAULT_ASPECT_RATIO,
-    resolution: str = DEFAULT_RESOLUTION,
-    output_format: str = DEFAULT_OUTPUT_FORMAT,
+    num_images: int = 1,
+    aspect_ratio: str = "auto",
+    resolution: str = "1K",
+    output_format: str = "png",
     seed: Optional[int] = None,
     enable_web_search: bool = False,
-    api_key: Optional[str] = None,
 ) -> dict:
-    """
-    Generate image(s) from a text prompt using sync mode.
+    """Generate image using fal.ai nano-banana-2 API."""
     
-    Args:
-        prompt: Text description of the image
-        num_images: Number of images to generate (1-4)
-        aspect_ratio: Aspect ratio (auto, 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16)
-        resolution: Resolution (0.5K, 1K, 2K, 4K)
-        output_format: Output format (jpeg, png, webp)
-        seed: Random seed for reproducibility
-        enable_web_search: Enable web search for up-to-date info
-        api_key: FAL API key
+    api_key = get_api_key()
+    if not api_key:
+        raise ValueError(
+            "FAL_KEY not found. Set FAL_KEY environment variable "
+            "or create fal-key.txt in workspace root."
+        )
     
-    Returns:
-        API response with image URLs
-    """
-    if api_key is None:
-        api_key = get_api_key()
-    
-    # Build request payload
     payload = {
         "prompt": prompt,
         "num_images": num_images,
         "aspect_ratio": aspect_ratio,
         "resolution": resolution,
         "output_format": output_format,
-        "safety_tolerance": DEFAULT_SAFETY_TOLERANCE,
-        "limit_generations": True,
-        "sync_mode": True,  # Use sync mode for immediate response
+        "enable_web_search": enable_web_search,
     }
     
     if seed is not None:
         payload["seed"] = seed
     
-    if enable_web_search:
-        payload["enable_web_search"] = True
+    request = Request(
+        FAL_API_URL,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Key {api_key}",
+            "Content-Type": "application/json",
+        },
+    )
     
-    headers = {
-        "Authorization": f"Key {api_key}",
-        "Content-Type": "application/json",
-    }
+    try:
+        with urlopen(request, timeout=120) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except HTTPError as e:
+        error_body = e.read().decode("utf-8")
+        raise RuntimeError(f"API error: {e.code} - {error_body}")
+
+
+def save_image(url: str, output_dir: Path, filename: str) -> Path:
+    """Download and save image from URL."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / filename
     
-    # Submit request
-    with httpx.Client(timeout=180.0) as client:
-        response = client.post(
-            FAL_API_URL,
-            headers=headers,
-            json=payload,
-        )
-        
-        if response.status_code == 401:
-            raise ValueError("Invalid FAL API key")
-        
-        if response.status_code == 402:
-            raise ValueError("FAL API quota exceeded")
-        
-        if response.status_code != 200:
-            error_detail = response.text
-            raise RuntimeError(f"API error {response.status_code}: {error_detail}")
-        
-        result = response.json()
+    request = Request(url, headers={"User-Agent": "ONIZUKA-AGI/1.0"})
     
-    return result
+    with urlopen(request, timeout=60) as response:
+        output_path.write_bytes(response.read())
+    
+    return output_path
+
+
+def cmd_generate(args):
+    """Generate images from prompt."""
+    print(f"Generating {args.num_images} image(s)...")
+    print(f"Prompt: {args.prompt}")
+    
+    result = generate_image(
+        prompt=args.prompt,
+        num_images=args.num_images,
+        aspect_ratio=args.aspect_ratio,
+        resolution=args.resolution,
+        output_format=args.output_format,
+        seed=args.seed,
+        enable_web_search=args.web_search,
+    )
+    
+    images = result.get("images", [])
+    print(f"\nGenerated {len(images)} image(s):")
+    
+    output_dir = Path(args.output_dir)
+    
+    for i, image in enumerate(images):
+        url = image.get("url")
+        if url:
+            print(f"\nImage {i + 1}:")
+            print(f"  URL: {url}")
+            
+            if args.save:
+                ext = args.output_format.lower()
+                filename = f"generated_{i + 1}.{ext}"
+                saved_path = save_image(url, output_dir, filename)
+                print(f"  Saved: {saved_path}")
+            
+            if args.seed is None:
+                print(f"  Seed: {image.get('seed', 'N/A')}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate images using fal.ai nano-banana-2",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  %(prog)s --prompt "A serene mountain landscape at sunset"
-  %(prog)s --prompt "cyberpunk city" --aspect-ratio 16:9 --resolution 2K
-  %(prog)s --prompt "portrait" --num-images 4 --output-format jpeg
-        """
+        description="Generate images with fal.ai nano-banana-2"
     )
     
-    parser.add_argument(
-        "--prompt", "-p",
-        required=True,
-        help="Text prompt for image generation"
-    )
-    
-    parser.add_argument(
-        "--num-images", "-n",
-        type=int,
-        default=DEFAULT_NUM_IMAGES,
-        choices=range(1, 5),
-        help=f"Number of images to generate (default: {DEFAULT_NUM_IMAGES})"
-    )
-    
-    parser.add_argument(
-        "--aspect-ratio", "-a",
-        default=DEFAULT_ASPECT_RATIO,
-        choices=["auto", "21:9", "16:9", "3:2", "4:3", "5:4", "1:1", "4:5", "3:4", "2:3", "9:16"],
-        help=f"Aspect ratio (default: {DEFAULT_ASPECT_RATIO})"
-    )
-    
-    parser.add_argument(
-        "--resolution", "-r",
-        default=DEFAULT_RESOLUTION,
-        choices=["0.5K", "1K", "2K", "4K"],
-        help=f"Resolution (default: {DEFAULT_RESOLUTION})"
-    )
-    
-    parser.add_argument(
-        "--output-format", "-f",
-        default=DEFAULT_OUTPUT_FORMAT,
-        choices=["jpeg", "png", "webp"],
-        help=f"Output format (default: {DEFAULT_OUTPUT_FORMAT})"
-    )
-    
-    parser.add_argument(
-        "--seed", "-s",
-        type=int,
-        help="Random seed for reproducibility"
-    )
-    
-    parser.add_argument(
-        "--enable-web-search",
-        action="store_true",
-        help="Enable web search for up-to-date info"
-    )
-    
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Output raw JSON response"
-    )
-    
-    parser.add_argument(
-        "--download", "-d",
-        metavar="DIR",
-        help="Download images to directory"
-    )
+    parser.add_argument("--prompt", "-p", required=True, help="Text prompt")
+    parser.add_argument("--num-images", "-n", type=int, default=1, help="Number of images")
+    parser.add_argument("--aspect-ratio", "-a", default="auto",
+                       choices=["auto", "21:9", "16:9", "3:2", "4:3", "5:4", "1:1", "4:5", "3:4", "2:3", "9:16"],
+                       help="Aspect ratio")
+    parser.add_argument("--resolution", "-r", default="1K",
+                       choices=["0.5K", "1K", "2K", "4K"],
+                       help="Resolution")
+    parser.add_argument("--output-format", "-f", default="png",
+                       choices=["jpeg", "png", "webp"],
+                       help="Output format")
+    parser.add_argument("--seed", "-s", type=int, help="Random seed")
+    parser.add_argument("--web-search", "-w", action="store_true",
+                       help="Enable web search for up-to-date info")
+    parser.add_argument("--save", action="store_true", help="Save images locally")
+    parser.add_argument("--output-dir", "-o", default="output",
+                       help="Output directory for saved images")
     
     args = parser.parse_args()
     
     try:
-        print(f"🎨 Generating image: {args.prompt[:50]}...")
-        
-        result = generate_image(
-            prompt=args.prompt,
-            num_images=args.num_images,
-            aspect_ratio=args.aspect_ratio,
-            resolution=args.resolution,
-            output_format=args.output_format,
-            seed=args.seed,
-            enable_web_search=args.enable_web_search,
-        )
-        
-        if args.json:
-            print(json.dumps(result, indent=2))
-            return
-        
-        images = result.get("images", [])
-        
-        if not images:
-            print("⚠️ No images generated")
-            return
-        
-        print(f"✅ Generated {len(images)} image(s):\n")
-        
-        for i, img in enumerate(images, 1):
-            url = img.get("url", "")
-            width = img.get("width", "?")
-            height = img.get("height", "?")
-            print(f"  [{i}] {url}")
-            print(f"      Size: {width}x{height}\n")
-        
-        # Download if requested
-        if args.download:
-            download_dir = Path(args.download)
-            download_dir.mkdir(parents=True, exist_ok=True)
-            
-            with httpx.Client() as client:
-                for i, img in enumerate(images, 1):
-                    url = img.get("url")
-                    if not url:
-                        continue
-                    
-                    ext = args.output_format
-                    filename = download_dir / f"nano-banana-2-{i}.{ext}"
-                    
-                    response = client.get(url)
-                    filename.write_bytes(response.content)
-                    print(f"  📥 Downloaded: {filename}")
-    
-    except ValueError as e:
-        print(f"❌ Error: {e}", file=sys.stderr)
-        sys.exit(1)
-    except httpx.HTTPStatusError as e:
-        print(f"❌ HTTP Error: {e}", file=sys.stderr)
-        sys.exit(1)
+        cmd_generate(args)
     except Exception as e:
-        print(f"❌ Error: {e}", file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
 
