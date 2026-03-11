@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-X Filtered Stream - Twitter/X Filtered Stream API Client
-
-Real-time tweet monitoring with Discord webhook notifications.
+X Filtered Stream Client
+リアルタイムでツイートを監視し、Discordに通知する
 """
 
 import argparse
@@ -13,46 +12,62 @@ import time
 from pathlib import Path
 from typing import Optional
 
-try:
-    import requests
-except ImportError:
-    print("Error: requests library required. Run: pip install requests")
-    sys.exit(1)
+import requests
 
-# Configuration paths
-WORKSPACE = Path(__file__).parent.parent.parent.parent
-BEARER_TOKEN_FILE = WORKSPACE / "data" / "x" / "x-bearer-token.json"
-WEBHOOK_FILE = WORKSPACE / "data" / "x" / "x-discord-webhook.json"
-STATE_FILE = WORKSPACE / "data" / "x" / "x-stream-state.json"
+# 設定パス
+WORKSPACE_ROOT = Path(__file__).parent.parent.parent.parent
+DATA_DIR = WORKSPACE_ROOT / "data" / "x"
+BEARER_TOKEN_FILE = DATA_DIR / "x-bearer-token.json"
+WEBHOOK_FILE = DATA_DIR / "x-discord-webhook.json"
+STATE_FILE = DATA_DIR / "x-stream-state.json"
+CONFIG_FILE = DATA_DIR / "x-stream-config.json"
 
-# X API endpoints
+# APIエンドポイント
 BASE_URL = "https://api.x.com/2"
 STREAM_URL = f"{BASE_URL}/tweets/search/stream"
-RULES_URL = f"{BASE_URL}/tweets/search/stream/rules"
+RULES_URL = f"{STREAM_URL}/rules"
 
-# Default rule for hAru_mAki_ch
-DEFAULT_RULE = "from:hAru_mAki_ch -is:retweet -is:reply"
-DEFAULT_TAG = "haru_maki_new_posts"
+# デフォルト設定
+DEFAULT_RULES = [
+    {
+        "value": "from:hAru_mAki_ch -is:retweet -is:reply",
+        "tag": "haru_maki_new_posts"
+    }
+]
+
+DEFAULT_TWEET_FIELDS = [
+    "created_at",
+    "author_id",
+    "public_metrics",
+    "entities",
+    "attachments"
+]
 
 
-def get_bearer_token() -> str:
-    """Get bearer token from file or environment."""
-    # Try environment variable first
+def load_bearer_token() -> str:
+    """Bearer Tokenを読み込む"""
+    # 環境変数優先
     token = os.environ.get("X_BEARER_TOKEN")
     if token:
         return token
     
-    # Try file
+    # ファイルから読み込み
     if BEARER_TOKEN_FILE.exists():
         with open(BEARER_TOKEN_FILE) as f:
             data = json.load(f)
             return data.get("bearer_token", "")
     
-    raise ValueError("Bearer token not found. Set X_BEARER_TOKEN or create data/x/x-bearer-token.json")
+    raise ValueError("Bearer Token not found. Set X_BEARER_TOKEN or create data/x/x-bearer-token.json")
 
 
-def get_webhook_url() -> Optional[str]:
-    """Get Discord webhook URL from file."""
+def load_webhook_url() -> Optional[str]:
+    """Discord Webhook URLを読み込む"""
+    # 環境変数優先
+    url = os.environ.get("DISCORD_WEBHOOK_URL")
+    if url:
+        return url
+    
+    # ファイルから読み込み
     if WEBHOOK_FILE.exists():
         with open(WEBHOOK_FILE) as f:
             data = json.load(f)
@@ -60,297 +75,287 @@ def get_webhook_url() -> Optional[str]:
     return None
 
 
+def load_state() -> dict:
+    """状態を読み込む"""
+    if STATE_FILE.exists():
+        with open(STATE_FILE) as f:
+            return json.load(f)
+    return {}
+
+
+def save_state(state: dict):
+    """状態を保存"""
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(STATE_FILE, "w") as f:
+        json.dump(state, f, indent=2)
+
+
 def get_headers(token: str) -> dict:
-    """Get API headers with bearer token."""
+    """APIリクエスト用ヘッダー"""
     return {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
 
-def test_connection(token: str) -> bool:
-    """Test API connection and credentials."""
-    print("Testing X API connection...")
+def get_rules(token: str) -> dict:
+    """現在のルールを取得"""
+    resp = requests.get(RULES_URL, headers=get_headers(token))
+    if resp.status_code == 200:
+        return resp.json()
+    elif resp.status_code == 403:
+        print(f"❌ 403 Forbidden - Filtered Stream権限が必要")
+        return {"data": []}
+    else:
+        print(f"❌ ルール取得エラー: {resp.status_code}")
+        print(resp.text)
+        return {"data": []}
+
+
+def add_rules(token: str, rules: list) -> bool:
+    """ルールを追加"""
+    payload = {"add": rules}
+    resp = requests.post(RULES_URL, headers=get_headers(token), json=payload)
     
-    headers = get_headers(token)
-    
-    # Test getting rules (validates credentials)
-    response = requests.get(RULES_URL, headers=headers)
-    
-    if response.status_code == 200:
-        print("✓ API connection successful")
-        data = response.json()
-        print(f"✓ Current rules: {len(data.get('data', []))}")
+    if resp.status_code == 201:
+        print(f"✅ ルール追加成功: {len(rules)}件")
         return True
-    elif response.status_code == 403:
-        print("✗ 403 Forbidden - Check Bearer Token and app permissions")
-        return False
     else:
-        print(f"✗ Error: {response.status_code} - {response.text}")
+        print(f"❌ ルール追加エラー: {resp.status_code}")
+        print(resp.text)
         return False
 
 
-def get_rules(token: str) -> list:
-    """Get current stream rules."""
-    headers = get_headers(token)
-    response = requests.get(RULES_URL, headers=headers)
-    
-    if response.status_code == 200:
-        data = response.json()
-        return data.get("data", [])
-    return []
-
-
-def list_rules(token: str):
-    """List current rules."""
+def delete_all_rules(token: str) -> bool:
+    """全ルールを削除"""
     rules = get_rules(token)
+    if not rules.get("data"):
+        print("📋 削除するルールなし")
+        return True
     
-    if not rules:
-        print("No rules configured")
-        return
-    
-    print(f"Current rules ({len(rules)}):")
-    for rule in rules:
-        print(f"  - [{rule.get('id')}] {rule.get('value')}")
-        if rule.get('tag'):
-            print(f"    Tag: {rule.get('tag')}")
-
-
-def clear_rules(token: str):
-    """Clear all rules."""
-    rules = get_rules(token)
-    
-    if not rules:
-        print("No rules to clear")
-        return
-    
-    headers = get_headers(token)
-    ids = [r["id"] for r in rules]
-    
+    ids = [r["id"] for r in rules["data"]]
     payload = {"delete": {"ids": ids}}
-    response = requests.post(RULES_URL, headers=headers, json=payload)
+    resp = requests.post(RULES_URL, headers=get_headers(token), json=payload)
     
-    if response.status_code == 200:
-        print(f"✓ Cleared {len(ids)} rules")
+    if resp.status_code == 200:
+        print(f"✅ ルール削除成功: {len(ids)}件")
+        return True
     else:
-        print(f"✗ Error clearing rules: {response.status_code} - {response.text}")
+        print(f"❌ ルール削除エラー: {resp.status_code}")
+        print(resp.text)
+        return False
 
 
-def add_rule(token: str, value: str, tag: Optional[str] = None):
-    """Add a new rule."""
-    headers = get_headers(token)
-    
-    rule = {"value": value}
-    if tag:
-        rule["tag"] = tag
-    
-    payload = {"add": [rule]}
-    response = requests.post(RULES_URL, headers=headers, json=payload)
-    
-    if response.status_code == 201:
-        data = response.json()
-        print(f"✓ Rule added: {value}")
-        if data.get("data"):
-            for r in data["data"]:
-                print(f"  ID: {r.get('id')}")
-    else:
-        print(f"✗ Error adding rule: {response.status_code} - {response.text}")
-
-
-def setup_default_rules(token: str):
-    """Setup default rules for hAru_mAki_ch."""
-    print(f"Setting up default rule: {DEFAULT_RULE}")
-    
-    # Clear existing rules first
-    clear_rules(token)
-    time.sleep(0.5)
-    
-    # Add default rule
-    add_rule(token, DEFAULT_RULE, DEFAULT_TAG)
-
-
-def save_state(tweet_id: str, tweet_data: dict):
-    """Save last tweet state."""
-    state = {
-        "last_tweet_id": tweet_id,
-        "last_tweet_at": tweet_data.get("created_at", ""),
-        "last_updated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    }
-    
-    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(STATE_FILE, "w") as f:
-        json.dump(state, f, indent=2)
-
-
-def send_discord_notification(webhook_url: str, tweet: dict):
-    """Send Discord notification for a tweet."""
+def send_discord_notification(webhook_url: str, tweet: dict) -> bool:
+    """Discordに通知"""
     tweet_id = tweet.get("id", "")
     text = tweet.get("text", "")
     author_id = tweet.get("author_id", "")
     created_at = tweet.get("created_at", "")
     
-    # Build tweet URL
-    tweet_url = f"https://x.com/user/status/{tweet_id}"
+    # ツイートURL
+    tweet_url = f"https://x.com/i/status/{tweet_id}"
     
-    # Build embed
-    embed = {
-        "title": "🆕 New Tweet Detected",
-        "description": text[:500] + ("..." if len(text) > 500 else ""),
-        "url": tweet_url,
-        "color": 0x1DA1F2,  # Twitter blue
-        "fields": [
-            {"name": "Tweet ID", "value": tweet_id, "inline": True},
-            {"name": "Author ID", "value": author_id, "inline": True},
-        ],
-        "timestamp": created_at,
-        "footer": {"text": "X Filtered Stream"}
-    }
-    
+    # Embed形式で通知
     payload = {
-        "content": "<@&1475432244725288973> 新しいツイートを検知しました",
-        "embeds": [embed]
+        "content": "🐦 新規投稿を検知しました！",
+        "embeds": [{
+            "title": "📝 ツイート内容",
+            "description": text[:500] + ("..." if len(text) > 500 else ""),
+            "url": tweet_url,
+            "color": 1942002,  # Xの青色
+            "fields": [
+                {"name": "投稿者ID", "value": author_id, "inline": True},
+                {"name": "投稿時刻", "value": created_at, "inline": True}
+            ],
+            "footer": {"text": "X Filtered Stream"}
+        }],
+        "allowed_mentions": {"parse": []}
     }
     
-    response = requests.post(webhook_url, json=payload)
-    
-    if response.status_code == 204:
-        print(f"✓ Discord notification sent for tweet {tweet_id}")
-    else:
-        print(f"✗ Discord notification failed: {response.status_code}")
+    try:
+        resp = requests.post(webhook_url, json=payload)
+        if resp.status_code == 204:
+            print(f"✅ Discord通知成功: {tweet_id}")
+            return True
+        else:
+            print(f"❌ Discord通知エラー: {resp.status_code}")
+            print(resp.text)
+            return False
+    except Exception as e:
+        print(f"❌ Discord通知例外: {e}")
+        return False
 
 
-def test_webhook(token: str):
-    """Test Discord webhook notification."""
-    webhook_url = get_webhook_url()
+def stream_tweets(token: str, webhook_url: Optional[str] = None):
+    """ストリーミング開始"""
+    print("🔄 ストリーミング開始...")
     
-    if not webhook_url:
-        print("✗ Webhook URL not found in data/x/x-discord-webhook.json")
-        return
-    
-    # Send test notification
-    test_tweet = {
-        "id": "test_123456",
-        "text": "This is a test notification from X Filtered Stream",
-        "author_id": "test_user",
-        "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    }
-    
-    print("Sending test notification...")
-    send_discord_notification(webhook_url, test_tweet)
-
-
-def stream(token: str):
-    """Start streaming tweets."""
-    webhook_url = get_webhook_url()
-    
-    if not webhook_url:
-        print("Warning: No webhook URL configured. Tweets will be logged only.")
-    
-    headers = get_headers(token)
-    
-    # Tweet fields to retrieve
     params = {
-        "tweet.fields": "created_at,author_id,public_metrics,entities,attachments"
+        "tweet.fields": ",".join(DEFAULT_TWEET_FIELDS)
     }
     
-    print("Starting X Filtered Stream...")
-    print(f"Monitoring rules: {DEFAULT_RULE}")
-    print("Press Ctrl+C to stop\n")
-    
-    while True:
-        try:
-            response = requests.get(
-                STREAM_URL,
-                headers=headers,
-                params=params,
-                stream=True,
-                timeout=90
-            )
+    try:
+        with requests.get(
+            STREAM_URL,
+            headers=get_headers(token),
+            params=params,
+            stream=True,
+            timeout=90
+        ) as resp:
+            if resp.status_code != 200:
+                print(f"❌ ストリーム接続エラー: {resp.status_code}")
+                print(resp.text)
+                return
             
-            if response.status_code != 200:
-                print(f"Error: {response.status_code} - {response.text}")
-                print("Retrying in 10 seconds...")
-                time.sleep(10)
-                continue
+            print("✅ ストリーム接続成功")
             
-            for line in response.iter_lines():
+            for line in resp.iter_lines():
                 if not line:
                     continue
                 
                 try:
                     data = json.loads(line)
                     
-                    # Check for errors
+                    # エラー処理
                     if "errors" in data:
-                        print(f"Error: {data['errors']}")
+                        print(f"⚠️ エラー: {data['errors']}")
                         continue
                     
-                    # Process tweet
+                    # ツイート処理
                     if "data" in data:
                         tweet = data["data"]
-                        tweet_id = tweet.get("id")
-                        text = tweet.get("text", "")
+                        tweet_id = tweet.get("id", "")
+                        text = tweet.get("text", "")[:100]
                         
-                        print(f"\n{'='*60}")
-                        print(f"Tweet ID: {tweet_id}")
-                        print(f"Text: {text[:100]}...")
-                        print(f"{'='*60}")
+                        print(f"📨 ツイート検知: {tweet_id}")
+                        print(f"   {text}...")
                         
-                        # Save state
-                        save_state(tweet_id, tweet)
+                        # 状態保存
+                        save_state({
+                            "last_tweet_id": tweet_id,
+                            "last_tweet_at": tweet.get("created_at", "")
+                        })
                         
-                        # Send notification
+                        # Discord通知
                         if webhook_url:
                             send_discord_notification(webhook_url, tweet)
                 
                 except json.JSONDecodeError:
                     continue
-        
-        except requests.exceptions.Timeout:
-            print("Connection timeout, reconnecting...")
-            continue
-        except requests.exceptions.RequestException as e:
-            print(f"Connection error: {e}")
-            print("Reconnecting in 10 seconds...")
-            time.sleep(10)
-        except KeyboardInterrupt:
-            print("\nStream stopped by user")
-            break
+                except Exception as e:
+                    print(f"❌ 処理エラー: {e}")
+                    continue
+    
+    except requests.exceptions.Timeout:
+        print("⏰ 接続タイムアウト - 再接続中...")
+        time.sleep(5)
+        stream_tweets(token, webhook_url)
+    except requests.exceptions.RequestException as e:
+        print(f"❌ 接続エラー: {e}")
+        print("5秒後に再接続...")
+        time.sleep(5)
+        stream_tweets(token, webhook_url)
+
+
+def test_connection(token: str) -> bool:
+    """接続テスト"""
+    print("🔍 接続テスト...")
+    
+    # ルール取得でテスト
+    rules = get_rules(token)
+    if "data" in rules:
+        print(f"✅ 接続成功 - 現在のルール: {len(rules.get('data', []))}件")
+        return True
+    return False
+
+
+def test_webhook(webhook_url: str) -> bool:
+    """Webhookテスト"""
+    print("🔍 Webhookテスト...")
+    
+    payload = {
+        "content": "🧪 X Filtered Stream テスト通知",
+        "embeds": [{
+            "title": "テスト",
+            "description": "これはテスト通知です",
+            "color": 65280
+        }]
+    }
+    
+    try:
+        resp = requests.post(webhook_url, json=payload)
+        if resp.status_code == 204:
+            print("✅ Webhookテスト成功")
+            return True
+        else:
+            print(f"❌ Webhookテストエラー: {resp.status_code}")
+            return False
+    except Exception as e:
+        print(f"❌ Webhookテスト例外: {e}")
+        return False
 
 
 def main():
     parser = argparse.ArgumentParser(description="X Filtered Stream Client")
     parser.add_argument("command", choices=[
-        "test", "setup", "rules", "clear", "add", "stream", "test-webhook"
-    ], help="Command to execute")
-    parser.add_argument("value", nargs="?", help="Rule value (for 'add')")
-    parser.add_argument("--tag", help="Rule tag (for 'add')")
+        "test", "test-webhook", "setup", "rules", "clear", "add", "stream"
+    ], help="実行コマンド")
+    parser.add_argument("--rule", help="追加するルール")
+    parser.add_argument("--tag", help="ルールのタグ")
     
     args = parser.parse_args()
     
     try:
-        token = get_bearer_token()
+        token = load_bearer_token()
+        webhook_url = load_webhook_url()
     except ValueError as e:
-        print(f"Error: {e}")
+        print(f"❌ {e}")
         sys.exit(1)
     
     if args.command == "test":
         test_connection(token)
-    elif args.command == "setup":
-        setup_default_rules(token)
-    elif args.command == "rules":
-        list_rules(token)
-    elif args.command == "clear":
-        clear_rules(token)
-    elif args.command == "add":
-        if not args.value:
-            print("Error: Rule value required for 'add' command")
-            sys.exit(1)
-        add_rule(token, args.value, args.tag)
-    elif args.command == "stream":
-        stream(token)
+    
     elif args.command == "test-webhook":
-        test_webhook(token)
+        if not webhook_url:
+            print("❌ Webhook URL未設定")
+            sys.exit(1)
+        test_webhook(webhook_url)
+    
+    elif args.command == "setup":
+        print("📋 デフォルトルール設定中...")
+        delete_all_rules(token)
+        add_rules(token, DEFAULT_RULES)
+        print("\n現在のルール:")
+        rules = get_rules(token)
+        for r in rules.get("data", []):
+            print(f"  - {r.get('tag', 'no-tag')}: {r.get('value', '')}")
+    
+    elif args.command == "rules":
+        print("📋 現在のルール:")
+        rules = get_rules(token)
+        if not rules.get("data"):
+            print("  (ルールなし)")
+        else:
+            for r in rules["data"]:
+                print(f"  - [{r.get('tag', 'no-tag')}] {r.get('value', '')}")
+    
+    elif args.command == "clear":
+        delete_all_rules(token)
+    
+    elif args.command == "add":
+        if not args.rule:
+            print("❌ --rule が必要です")
+            sys.exit(1)
+        rule = {"value": args.rule}
+        if args.tag:
+            rule["tag"] = args.tag
+        add_rules(token, [rule])
+    
+    elif args.command == "stream":
+        print(f"🌐 Webhook: {'設定済み' if webhook_url else '未設定'}")
+        print("🔄 ストリーミング開始 (Ctrl+C で終了)")
+        stream_tweets(token, webhook_url)
 
 
 if __name__ == "__main__":
