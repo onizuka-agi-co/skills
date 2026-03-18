@@ -10,12 +10,44 @@ Xのコミュニティ機能への投稿に特化したスキル。
 ## Quick Start
 
 ```bash
+# 基本的なコミュニティ投稿
 uv run skills/x-community/scripts/x_community.py post "投稿テキスト"
+
+# 画像付き投稿
+uv run skills/x-community/scripts/x_community.py post "投稿テキスト" --image path/to/image.png
+
+# ビジュアル引用投稿（自動で画像生成）
+uv run skills/x-community/scripts/visual_quote.py "https://x.com/user/status/123" --comment "解説"
 ```
 
 ## Commands
 
-### 投稿
+### visual-quote（画像付き引用投稿）
+
+```bash
+# 引用元ツイートを可視化して投稿
+uv run skills/x-community/scripts/visual_quote.py <tweet_url> --comment "解説テキスト"
+```
+
+**処理フロー:**
+1. 引用元ツイートを取得
+2. nano-banana-2で内容を可視化した画像生成
+3. 画像をXにアップロード
+4. コミュニティに投稿（解説 + 引用内容 + 画像）
+
+**投稿形式:**
+```
+[解説テキスト]
+
+---
+📝 引用元:
+@username: ツイート内容
+
+#ONIZUKA_AGI
+[画像]
+```
+
+### 投稿（基本）
 
 ```bash
 # コミュニティへ投稿（フォロワーにも表示 - デフォルト）
@@ -23,6 +55,9 @@ uv run skills/x-community/scripts/x_community.py post "投稿テキスト"
 
 # コミュニティのみ（フォロワーには表示しない）
 uv run skills/x-community/scripts/x_community.py post "投稿テキスト" --no-share
+
+# 画像付き投稿
+uv run skills/x-community/scripts/x_community.py post "投稿テキスト" --image path/to/image.png
 
 # 引用リツイートをコミュニティに投稿（URLを含める形式）
 uv run skills/x-community/scripts/x_community.py post "解説テキスト https://x.com/user/status/123"
@@ -74,12 +109,15 @@ x-community skillでコミュニティに投稿: [テキスト]
 | パラメータ | デフォルト | 説明 |
 |-----------|-----------|------|
 | `--no-share` | false | フォロワーには表示しない（コミュニティのみ） |
+| `--image <path>` | - | 添付画像のパス |
+| `--comment <text>` | - | visual-quote用の解説テキスト |
 
 ## 必要なファイル
 
-- `x-tokens.json` - アクセストークン（workspace直下）
-- `x-client-credentials.json` - クライアント認証情報（workspace直下）
-- `x-community-config.json` - コミュニティ設定（自動生成）
+- `data/x/x-tokens.json` - アクセストークン
+- `data/x/x-client-credentials.json` - クライアント認証情報
+- `data/x/x-community-config.json` - コミュニティ設定（自動生成）
+- `fal-key.txt` - nano-banana-2用（visual-quoteのみ）
 
 ## Rate Limits
 
