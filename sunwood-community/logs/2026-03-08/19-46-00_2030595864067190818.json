@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-03-08T10:46:00+00:00",
+  "original_tweet": {
+    "id": "2030595864067190818",
+    "text": "noteで記事を書きました！この投稿をリポストするとお得に記事を読むことができます🚙🚙🚙。\n\nCodex CLI（gpt-5.4 xhigh）に JetBot のセットアップを任せたら、Waveshare 版の落とし穴まで突破できた話 | Maki@Sunwood.ai.labs @hAru_mAki_ch #note https://t.co/AcKsC7giQW",
+    "url": "https://x.com/i/status/2030595864067190818",
+    "author": "hAru_mAki_ch"
+  },
+  "community_post": {
+    "id": "2030596085228675291",
+    "text": "🤖 Codex CLIがJetBotセットアップを自律実行！Waveshare版の落とし穴を突破した実録\n\nOpenAI Codex CLI（gpt-5.4 xhigh）にJetBotのセットアップを丸投げした結果、興味深い知見が得られました。\n\n✅ Codex CLIの--yoloモードとは\n• 端末を直接操作しながら自律的に作業を進めるAIエージェント\n• チャットで聞いて自分で打つではなく、先輩が横でキーボードを操作してくれるイメージ\n• 確認ダイアログなしでコマンドを自動実行\n\n🎯 7フェーズの自律セットアップ\nPhase 1: Jetson本体の起動確認\nPhase 2: JetBotソフトの最小構成導入（Python 3.6互換バージョン固定）\nPhase 3: Jupyterのセットアップ（サービス自動生成・パスワード設定）\nPhase 4: I2Cデバイスが見えない問題の切り分け\nPhase 5: 人間が気づいた転換点（Waveshare版特有の問題）\nPhase 6: i2cdetectの使い方で解決（-r オプションで検出成功）\nPhase 7: Waveshare互換コードへの差し替え\n\n💡 重要な発見：人間とAIの協調\nCodex CLIが切り分けを進める中で、人間が「これWaveshare版では？」と気づいて情報を提供。この一言で調査の方向が一変しました。\n\n• AIが自動発見したわけではない\n• 人間の「違和感」→ ハードウェア情報提供 → AIが調査方針転換\n• この協調が突破口になった\n\n⚠️ Waveshare版の落とし穴\n• NVIDIA公式版とコードが微妙に異なる\n• 公式版に更新するとバッテリー表示・モーター動作に問題\n• TB6612FNG モータ制御IC、OLED、INA219電源監視IC搭載の独自基板\n\n🔬 i2cdetectの意外な挙動\n• i2cdetect -y 1 → 何も見えない（quick writeベース）\n• i2cdetect -y -r 1 → デバイス検出成功（readモード）\n• Waveshare基板のデバイスとquick writeの相性問題\n\n📊 最終結果\nJupyter・カメラ・OLED・モーターの基本動作まで確認完了。ハード故障ではなく「見つけ方の問題」だったと判明。",
+    "url": "https://x.com/i/status/2030596085228675291"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-03-08T10:30:00+00:00",
+  "original_tweet": {
+    "id": "2030591527718642114",
+    "text": "【OpenClaw を使うなら読んでほしい】\n月額 $3 で 8 モデルが使えるアリババクラウドが現状ベストコスパです🦞\n\nでも先にやりがちな罠を全部まとめました👇\n\n❌ Claude Pro/Max をプロキシ経由で接続\n→ 2026年1月に技術的に完全ブロック済み\n→ アカウント停止事例あり・規約違反で明文化\n\n❌ Google https://t.co/RhIQVcXlyU https://t.co/xFm23ppLXu",
+    "url": "https://x.com/i/status/2030591527718642114",
+    "author": "hAru_mAki_ch"
+  },
+  "community_post": {
+    "id": "2030592402457874892",
+    "text": "🔍 OpenClawユーザー必見！最強コスパAPIプロバイダー比較\n\nアリババクラウド Coding Plan が現状ベストの理由：\n\n✅ 圧倒的コスパ\n• 初月約$3で8モデル利用可能\n• Qwen3.5-Plus: 100万トークン入力約$0.11（Gemini 3 Proの約1/18）\n\n✅ エージェント用途に最適化\n• レートリミットが高く、並列処理も快適\n• 8モデルをSubagentとして同時起動可能\n\n✅ モデルラインナップ充実\n• Qwen、Kimi、GLM、MiniMaxなど主要モデルを1プランで切り替え可能\n\n✅ ドキュメントが手厚い\n• OpenClaw、Claude Code、Cursor、Clineなど主要ツールすべてに個別セットアップページ\n\n⚠️ 避けるべき選択肢\n• Claude Pro/Max経由のプロキシ接続→2026年1月に技術的ブロック済み、アカウント停止リスクあり\n• Z.AI（GLM）→値上がり＋同時実行数制限（3）\n• Kimi API→Kimi Claw（競合サービス）との干渉で現状非対応\n\n💡 結論\nOpenClawは「自分のAPIキーを持ち込む」方式だから、プロバイダー選びが超重要。コストも快適さも両立したいなら、アリババクラウド一択。",
+    "url": "https://x.com/i/status/2030592402457874892"
+  }
+}

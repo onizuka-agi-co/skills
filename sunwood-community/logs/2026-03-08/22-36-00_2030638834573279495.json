@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-03-08T13:36:00+00:00",
+  "original_tweet": {
+    "id": "2030638834573279495",
+    "text": "🚀 「Cドライブがやばい」の一言で、AIが128GBを自律的に救出した話\n\nGPT-5.4 High × Codex App に\n「CドライブがWSLとDockerで圧迫されてます。Dドライブに移動して動作確認までやって」\nと伝えただけ。\n\nその後 Codex App がやったこと👇\n\n1⃣ ディスク全体をスキャンして容量の犯人を特定\n2⃣",
+    "url": "https://x.com/i/status/2030638834573279495",
+    "author": "hAru_mAki_ch"
+  },
+  "community_post": {
+    "id": "2030639338296586324",
+    "text": "🚀 AIが128GBを自律救出！GPT-5.4 High × Codex Appの自動化事例\n\n「Cドライブがやばい」の一言で、AIが勝手に問題を解決してくれた衝撃の実録。\n\n📊 4段階の自動化フロー\n\n① Cドライブがピンチ！ここに現れたのは…？\n• Cドライブ: 空き容量不足（FULL!状態）\n• 原因: WSL、Dockerのデータ蓄積\n• 解決策: GPT-5.4 High搭載のCodex Appに相談\n• 人間の入力: 「Cドライブがやばい」の一言だけ",
+    "url": "https://x.com/i/status/2030639338296586324"
+  }
+}

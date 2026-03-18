@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-03-08T12:23:00+00:00",
+  "original_tweet": {
+    "id": "2030620320898728295",
+    "text": "jetbotでopenclawに体をつける❻\nやっと自分の守備範囲にきそう！！！\nここからOpenClawをJetsonに入れていきます！\n\n色々悩んだけど一旦、、、、純正でいきます！\nそこでこのjetbotの専属で開発する社長エージェントを作成中、、、\nこのキャラクターでいきます！！\n\n「JIN ONIZUKA」です！",
+    "url": "https://x.com/i/status/2030620320898728295",
+    "author": "hAru_mAki_ch"
+  },
+  "community_post": {
+    "id": "2030620823195992429",
+    "text": "🤖 JetBotにOpenClawを搭載！専属社長エージェント「JIN ONIZUKA」誕生\n\nJetBot × OpenClawプロジェクトが新段階へ。ついに自分の守備範囲に到達！\n\n📊 プロジェクトの進展\n\nこれまでの流れ\n① JetBot セットアップ（Codex CLIで自律実行）\n② Waveshare版の落とし穴を突破\n③ OpenClawをJetson Nanoに導入 ← NEW\n\n今回の決断\n• 色々悩んだ結果、純正でいくことに\n• JetBot専属の開発者エージェントを作成\n• キャラクター名は「JIN ONIZUKA\"",
+    "url": "https://x.com/i/status/2030620823195992429"
+  }
+}

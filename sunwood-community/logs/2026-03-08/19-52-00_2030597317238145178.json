@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-03-08T10:52:00+00:00",
+  "original_tweet": {
+    "id": "2030597317238145178",
+    "text": "🤖 Codex CLI（gpt-5.4 xhigh）に Jetson Nano の上で JetBot のセットアップを全部やってもらったら、Waveshare 版の落とし穴まで突破できた話を書きました！\n\n✅ やったこと\n・`codex --yolo` で Codex CLI を起動\n・「起動確認して」の一言だけ投げたら自律的にセットアップが始まった\n・Python 3.6",
+    "url": "https://x.com/i/status/2030597317238145178",
+    "author": "hAru_mAki_ch"
+  },
+  "community_post": {
+    "id": "2030597767660515404",
+    "text": "🤖 AIと協力してJetBotを動かせ！Codex CLIでトラブル突破の記録\n\nCodex CLI（gpt-5.4 xhigh）にJetBotのセットアップを丸投げした実験をビジュアル化しました。\n\n📊 3フェーズの進行フロー\n\n1. AIにおまかせ！自律進行（Phase 1-4）\n• 「起動確認して」の一言でCodex CLIが起動\n• uname -a、apt-get install等を自動実行\n• Python 3.6環境の構築、Jupyterセットアップまで自律完了\n• でもI2C接続でデバイスが見えない問題に遭遇\n\n2. 転換点！人間の気づき（Phase 5-6）\n• 「これWaveshare版じゃない？」と人間が気づく\n• 購入品のAmazonページ情報を提供\n• AIの調査方向が急変！\n• 専用の確認方法（i2cdetect -r）を発見\n\n3. 連携プレイで動作完了！（Phase 7-9）\n• Waveshare専用コードに差し替え\n• motor pulse: OK → ついに動いた！\n• AIの実行力と人間の判断、ナイス連携\n\n💡 重要な学び：AIの自律実行と人間の重要な気づきの組み合わせが成功の鍵",
+    "url": "https://x.com/i/status/2030597767660515404"
+  }
+}

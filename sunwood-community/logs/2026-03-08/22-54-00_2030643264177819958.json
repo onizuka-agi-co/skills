@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-03-08T13:54:00+00:00",
+  "original_tweet": {
+    "id": "2030643264177819958",
+    "text": "jetbotでopenclawに体をつける❼\n来たぞ！！！\nJetson nano上のopenclaw(picoclaw)とDiscordで接続できたぞ！！！\n\n一旦リポジトリを調整して〆ます！！\nこれはワクワク！！！",
+    "url": "https://x.com/i/status/2030643264177819958",
+    "author": "hAru_mAki_ch"
+  },
+  "community_post": {
+    "id": "2030643717552680999",
+    "text": "🤖 Jetson Nano上のOpenClaw（Picoclaw）がDiscordで誕生！\n\nJetBot × OpenClaw プロジェクトがついに「体」を得た瞬間。エッジデバイスでのAIエージェント実装が現実に！\n\n📊 プロジェクトの進展\n\nこれまでの流れ\n① JetBot セットアップ（Codex CLIで自律実行）\n② Waveshare版の落とし穴を突破\n③ 専属社長エージェント「JIN ONIZUKA」誕生\n④ OpenClawをJetson Nanoに導入\n⑤ Discord接続成功 ← NEW",
+    "url": "https://x.com/i/status/2030643717552680999"
+  }
+}
