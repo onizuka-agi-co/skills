@@ -279,6 +279,17 @@ def generate_smart_summary(
     tweet_text: str, author_name: str, context: dict, template: str = "notable", include_quote: bool = True
 ) -> str:
     """文脈を考慮したスマートな解説を生成"""
+    
+    # Markdown記法を除去する関数（Xは非対応）
+    def strip_markdown(text: str) -> str:
+        import re
+        # **bold** -> bold
+        text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
+        # *italic* -> italic
+        text = re.sub(r'\*([^*]+)\*', r'\1', text)
+        # `code` -> code
+        text = re.sub(r'`([^`]+)`', r'\1', text)
+        return text
 
     # トピックに基づく分類
     topics = context.get("related_topics", [])
@@ -317,18 +328,18 @@ def generate_smart_summary(
 
     tmpl = TEMPLATES.get(template, TEMPLATES["notable"])
 
-    # 内容の要約（短縮）
-    if len(tweet_text) > 150:
-        summary = tweet_text[:150] + "..."
+    # 内容の要約（短縮）- Markdown記法を除去
+    tweet_text_clean = strip_markdown(tweet_text)
+    if len(tweet_text_clean) > 150:
+        summary = tweet_text_clean[:150] + "..."
     else:
-        summary = tweet_text
+        summary = tweet_text_clean
 
-    # 文脈情報
+    # 文脈情報 - Markdown記法を除去
     context_text = ""
     if is_series and context.get("previous_summaries"):
-        context_text = "📌 これまでの流れ:\n" + "\n".join(
-            f"• {s[:50]}..." for s in context["previous_summaries"][:3]
-        )
+        cleaned_summaries = [strip_markdown(s)[:50] + "..." for s in context["previous_summaries"][:3]]
+        context_text = "📌 これまでの流れ:\n" + "\n".join(f"• {s}" for s in cleaned_summaries)
 
     # ハッシュタグ
     hashtags = "#ONIZUKA_AGI"
@@ -336,11 +347,10 @@ def generate_smart_summary(
     # タイトル生成
     title = f"{author_name}の{tmpl['title']}"
 
-    # 元ツイートの引用を含める
+    # 元ツイートの引用を含める - Markdown記法を除去
     quote_block = ""
     if include_quote:
-        # ツイートテキストを整形（長い場合は短縮）
-        quoted_text = tweet_text if len(tweet_text) <= 200 else tweet_text[:200] + "..."
+        quoted_text = tweet_text_clean if len(tweet_text_clean) <= 200 else tweet_text_clean[:200] + "..."
         quote_block = f"\n\n📝 元ポスト:\n{quoted_text}"
 
     # フォーマット適用
