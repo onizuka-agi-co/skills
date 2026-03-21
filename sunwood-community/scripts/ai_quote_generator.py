@@ -520,9 +520,10 @@ def main():
             post_id = result.get("data", {}).get("id", "")
             print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
         except Exception as e:
-            # community_id + quote_tweet_id の併用が403エラーの場合、返信としてURLを投稿
-            if "403" in str(e) or "Forbidden" in str(e):
-                print("⚠️ 引用リツイート形式が禁止されています")
+            # community_id + quote_tweet_id の併用がエラーの場合、返信としてURLを投稿
+            error_str = str(e)
+            if "403" in error_str or "400" in error_str or "Forbidden" in error_str or "Bad Request" in error_str:
+                print(f"⚠️ 引用リツイート形式が禁止されています ({error_str[:50]}...)")
                 # テキストのみで投稿
                 result = post_community_tweet(quote_text, token, media_ids)
                 post_id = result.get("data", {}).get("id", "")
