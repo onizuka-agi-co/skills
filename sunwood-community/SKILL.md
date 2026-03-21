@@ -50,6 +50,12 @@ GitHub event 用の依頼文テンプレート:
 
 `prompts/github_event_quote.md`
 
+共通ルール断片:
+
+- `prompts/shared_posting_rules.md`
+- `prompts/shared_explainer_requirements.md`
+- `prompts/shared_result_requirements.md`
+
 ## 新機能：可視化画像添付 (--visual)
 
 `--visual`フラグを使用すると、`/prj/ai-agent-desktop-ubuntu/futodama-config/.openclaw/workspace/memory/docs/public/Onizuka_2k_delpmaspu.png` を参照画像として使い、nano-banana-2 edit ベースでポスト内容を可視化した図解画像を自動生成・添付します。
