@@ -25,7 +25,9 @@ import httpx
 
 # 設定
 COMMUNITY_ID = "2010195061309587967"  # Sunwood AI OSS Hub
-TOKEN_FILE = Path(__file__).parent.parent.parent.parent / "x-tokens.json"
+WORKSPACE_ROOT = Path(__file__).parent.parent.parent.parent
+DATA_X_DIR = WORKSPACE_ROOT / "data" / "x"
+TOKEN_FILE = Path(os.environ.get("SUNWOOD_COMMUNITY_TOKEN_FILE", str(DATA_X_DIR / "x-tokens.json")))
 LOGS_DIR = Path(__file__).parent.parent / "logs"
 
 # テンプレート定義（XはMarkdown非対応のため**は使用しない）
@@ -67,7 +69,7 @@ FAL_API_URL = "https://fal.run/fal-ai/nano-banana-2"
 
 # API key file locations for fal.ai
 FAL_KEY_FILES = [
-    Path(__file__).parent.parent.parent.parent / "fal-key.txt",
+    WORKSPACE_ROOT / "fal-key.txt",
     Path.home() / ".fal-key.txt",
 ]
 

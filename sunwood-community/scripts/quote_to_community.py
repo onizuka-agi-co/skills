@@ -9,6 +9,7 @@ Usage:
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,7 +19,9 @@ import httpx
 
 # 設定
 COMMUNITY_ID = "2010195061309587967"  # Sunwood AI OSS Hub
-TOKEN_FILE = Path(__file__).parent.parent.parent.parent / "x-tokens.json"
+WORKSPACE_ROOT = Path(__file__).parent.parent.parent.parent
+DATA_X_DIR = WORKSPACE_ROOT / "data" / "x"
+TOKEN_FILE = Path(os.environ.get("SUNWOOD_COMMUNITY_TOKEN_FILE", str(DATA_X_DIR / "x-tokens.json")))
 LOGS_DIR = Path(__file__).parent.parent / "logs"
 
 
