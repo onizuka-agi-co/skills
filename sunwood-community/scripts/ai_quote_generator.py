@@ -186,9 +186,10 @@ def generate_visual_image(prompt: str) -> str:
             print(f"⚠️ nano-banana-2 edit failed, falling back to text-to-image: {exc}")
 
     fallback_prompt = (
-        f"Create an infographic-style illustration featuring a {CHARACTER_DESCRIPTION}. "
-        f"The character is explaining or presenting: {prompt}. "
-        f"Style: modern, clean, infographic-like with soft colors, educational diagram aesthetic."
+        f"{CHARACTER_DESCRIPTION} の要素を持つキャラクターが、次の内容を日本語で図解している画像を作ってください: {remove_urls(prompt)}. "
+        "英語原文をそのまま入れず、内容を理解して日本語の見出しと短いラベルに言い換えてください。 "
+        "3から5個の要点を、アイコン、矢印、短いラベルで整理したラフな explainer にしてください。 "
+        "赤と黒を基調にした実用的な editorial explainer で、文字は詰め込みすぎないでください。"
     )
     fallback_payload = dict(base_payload)
     fallback_payload["prompt"] = fallback_prompt
@@ -661,8 +662,9 @@ def main():
                 media_ids = [media_id]
                 print(f"✅ アップロード完了: media_id={media_id}")
             except Exception as e:
-                print(f"⚠️ 画像処理エラー: {e}")
-                print("📝 テキストのみで投稿します...")
+                raise RuntimeError(
+                    "Visual mode requires an attached image, but image generation or upload failed."
+                ) from e
 
         # 投稿実行（引用リツイート形式を試行）
         try:
