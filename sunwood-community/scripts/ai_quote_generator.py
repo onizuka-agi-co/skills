@@ -28,37 +28,37 @@ COMMUNITY_ID = "2010195061309587967"  # Sunwood AI OSS Hub
 TOKEN_FILE = Path(__file__).parent.parent.parent.parent / "x-tokens.json"
 LOGS_DIR = Path(__file__).parent.parent / "logs"
 
-# テンプレート定義
+# テンプレート定義（XはMarkdown非対応のため**は使用しない）
 TEMPLATES = {
     "notable": {
         "prefix": "🔍",
         "title": "注目ポスト解説",
-        "format": "{emoji} **{title}**\n\n{summary}\n\n{context}",
+        "format": "{emoji} {title}\n\n{summary}\n\n{context}",
     },
     "news": {
         "prefix": "📰",
         "title": "ニュース紹介",
-        "format": "{emoji} **{title}**\n\n{summary}\n\n{hashtags}",
+        "format": "{emoji} {title}\n\n{summary}\n\n{hashtags}",
     },
     "tip": {
         "prefix": "💡",
         "title": "Tips・豆知識",
-        "format": "{emoji} **{title}**\n\n{summary}\n\n{hashtags}",
+        "format": "{emoji} {title}\n\n{summary}\n\n{hashtags}",
     },
     "series": {
         "prefix": "📚",
         "title": "シリーズ連載",
-        "format": "{emoji} **{title} 第{num}弾**\n\n{summary}\n\n{context}\n\n{hashtags}",
+        "format": "{emoji} {title} 第{num}弾\n\n{summary}\n\n{context}\n\n{hashtags}",
     },
     "release": {
         "prefix": "🚀",
         "title": "リリース情報",
-        "format": "{emoji} **{title}**\n\n{summary}\n\n{hashtags}",
+        "format": "{emoji} {title}\n\n{summary}\n\n{hashtags}",
     },
     "insight": {
         "prefix": "🔮",
         "title": "技術解説",
-        "format": "{emoji} **{title}**\n\n{summary}\n\n{context}\n\n{hashtags}",
+        "format": "{emoji} {title}\n\n{summary}\n\n{context}\n\n{hashtags}",
     },
 }
 
