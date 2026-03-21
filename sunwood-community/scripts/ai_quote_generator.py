@@ -328,17 +328,17 @@ def generate_smart_summary(
 
     tmpl = TEMPLATES.get(template, TEMPLATES["notable"])
 
-    # 内容の要約（短縮）- Markdown記法を除去
+    # 内容の要約（短縮）- Markdown記法を除去、100文字制限
     tweet_text_clean = strip_markdown(tweet_text)
-    if len(tweet_text_clean) > 150:
-        summary = tweet_text_clean[:150] + "..."
+    if len(tweet_text_clean) > 100:
+        summary = tweet_text_clean[:100] + "..."
     else:
         summary = tweet_text_clean
 
-    # 文脈情報 - Markdown記法を除去
+    # 文脈情報 - Markdown記法を除去、省略
     context_text = ""
     if is_series and context.get("previous_summaries"):
-        cleaned_summaries = [strip_markdown(s)[:50] + "..." for s in context["previous_summaries"][:3]]
+        cleaned_summaries = [strip_markdown(s)[:30] + "..." for s in context["previous_summaries"][:2]]
         context_text = "📌 これまでの流れ:\n" + "\n".join(f"• {s}" for s in cleaned_summaries)
 
     # ハッシュタグ
@@ -347,10 +347,10 @@ def generate_smart_summary(
     # タイトル生成
     title = f"{author_name}の{tmpl['title']}"
 
-    # 元ツイートの引用を含める - Markdown記法を除去
+    # 元ツイートの引用を含める - Markdown記法を除去、80文字制限
     quote_block = ""
     if include_quote:
-        quoted_text = tweet_text_clean if len(tweet_text_clean) <= 200 else tweet_text_clean[:200] + "..."
+        quoted_text = tweet_text_clean if len(tweet_text_clean) <= 80 else tweet_text_clean[:80] + "..."
         quote_block = f"\n\n📝 元ポスト:\n{quoted_text}"
 
     # フォーマット適用
@@ -365,6 +365,10 @@ def generate_smart_summary(
     
     # 引用ブロックを追加
     result += quote_block
+    
+    # 全体を280文字に制限
+    if len(result) > 280:
+        result = result[:277] + "..."
 
     return result
 
