@@ -118,13 +118,15 @@ def build_visual_prompt(prompt: str) -> str:
     """Build a rough infographic prompt anchored on the Onizuka character sheet."""
     cleaned_prompt = remove_urls(prompt)
     return (
-        f"Use the provided character reference as the exact base character. "
-        f"Keep the face, hair, horns, outfit palette, and overall identity consistent. "
-        f"Create a rough infographic-style explanation image about: {cleaned_prompt}. "
-        f"Show 3 to 5 big visual points with icons, arrows, and simple diagram blocks. "
-        f"Avoid dense paragraphs and avoid tiny text. "
-        f"Make it readable at a glance for social posting. "
-        f"Style: bold editorial explainer, clean layout, warm red and black accents, practical and sketch-like."
+        "参照画像のキャラクターをそのままベースに使ってください。 "
+        "顔、髪、角、衣装の配色、全体の印象は維持してください。 "
+        f"題材は次の内容です: {cleaned_prompt}. "
+        "ざっくり内容が伝わるラフな図解にしてください。 "
+        "3から5個の要点を、アイコン、矢印、短いラベル、シンプルな図解ブロックで見せてください。 "
+        "図解内の見出し、ラベル、補足文はすべて自然な日本語にしてください。 "
+        "英語原文をそのまま画像内に配置しないでください。概念を日本語で短く言い換えてください。 "
+        "文字を詰め込みすぎず、一目で読める密度にしてください。 "
+        "スタイルは、赤と黒を基調にした実用的な editorial explainer で、少しラフな図解調にしてください。"
     )
 
 
