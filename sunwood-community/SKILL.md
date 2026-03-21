@@ -50,6 +50,10 @@ GitHub event 用の依頼文テンプレート:
 
 `prompts/github_event_quote.md`
 
+Bookmark 用の依頼文テンプレート:
+
+`prompts/bookmark_quote.md`
+
 共通ルール断片:
 
 - `prompts/shared_posting_rules.md`
