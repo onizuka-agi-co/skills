@@ -342,7 +342,7 @@ def generate_smart_summary(
         context_text = "📌 これまでの流れ:\n" + "\n".join(f"• {s}" for s in cleaned_summaries)
 
     # ハッシュタグ
-    hashtags = "#ONIZUKA_AGI"
+    hashtags = "$ONIAGI"
 
     # タイトル生成
     title = f"{author_name}の{tmpl['title']}"
