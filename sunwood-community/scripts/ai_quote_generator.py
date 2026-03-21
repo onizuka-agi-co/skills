@@ -531,7 +531,8 @@ def main():
                 
                 # 返信としてURLを投稿
                 tweet_url = f"https://x.com/i/status/{tweet_id}"
-                reply_result = post_community_tweet(tweet_url, token, reply_to_tweet_id=post_id)
+                reply_text = f"📎 元ポスト\n{tweet_url}"
+                reply_result = post_community_tweet(reply_text, token, reply_to_tweet_id=post_id)
                 reply_id = reply_result.get("data", {}).get("id", "")
                 print(f"✅ 返信投稿（URL）: https://x.com/i/status/{reply_id}")
             else:
