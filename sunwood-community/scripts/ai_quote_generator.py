@@ -13,6 +13,7 @@ import argparse
 import base64
 import json
 import os
+import re
 import sys
 import tempfile
 from datetime import datetime, timezone
@@ -29,6 +30,9 @@ WORKSPACE_ROOT = Path(__file__).parent.parent.parent.parent
 DATA_X_DIR = WORKSPACE_ROOT / "data" / "x"
 TOKEN_FILE = Path(os.environ.get("SUNWOOD_COMMUNITY_TOKEN_FILE", str(DATA_X_DIR / "x-tokens.json")))
 LOGS_DIR = Path(__file__).parent.parent / "logs"
+ONIAGI_TAG = "$ONIAGI"
+LEGACY_TAGS = ("#ONIZUKA_AGI",)
+URL_LINE_RE = re.compile(r"^https?://\S+$")
 
 # テンプレート定義（XはMarkdown非対応のため**は使用しない）
 TEMPLATES = {
@@ -277,6 +281,49 @@ def analyze_context(tweet_text: str, author_name: str, recent_logs: list[dict]) 
     return context
 
 
+def ensure_oniagi_tag(text: str, max_length: int | None = None) -> str:
+    """Normalize legacy tags and guarantee that $ONIAGI is present."""
+    normalized = (text or "").strip()
+    for legacy_tag in LEGACY_TAGS:
+        normalized = normalized.replace(legacy_tag, ONIAGI_TAG)
+
+    if ONIAGI_TAG not in normalized:
+        lines = normalized.splitlines() if normalized else []
+        if lines and URL_LINE_RE.match(lines[-1].strip()):
+            url_line = lines.pop().strip()
+            lines.extend(["", ONIAGI_TAG, "", url_line])
+            normalized = "\n".join(lines)
+        else:
+            normalized = f"{normalized}\n\n{ONIAGI_TAG}" if normalized else ONIAGI_TAG
+
+    if max_length is None or len(normalized) <= max_length:
+        return normalized
+
+    lines = normalized.splitlines()
+    trailing_url = lines[-1].strip() if lines and URL_LINE_RE.match(lines[-1].strip()) else ""
+    suffix = f"\n\n{ONIAGI_TAG}"
+    if trailing_url:
+        suffix += f"\n\n{trailing_url}"
+
+    available = max_length - len(suffix)
+    if available <= 0:
+        return suffix.strip()
+
+    body_lines: list[str] = []
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        is_trailing_url = trailing_url and index == len(lines) - 1 and stripped == trailing_url
+        if stripped == ONIAGI_TAG or stripped in LEGACY_TAGS or is_trailing_url:
+            continue
+        body_lines.append(line)
+
+    body = "\n".join(body_lines).strip()
+    body = body[:available].rstrip()
+    if not body:
+        return suffix.strip()
+    return f"{body}{suffix}"
+
+
 def generate_smart_summary(
     tweet_text: str, author_name: str, context: dict, template: str = "notable", include_quote: bool = True
 ) -> str:
@@ -343,8 +390,8 @@ def generate_smart_summary(
         cleaned_summaries = [strip_markdown(s)[:30] + "..." for s in context["previous_summaries"][:2]]
         context_text = "📌 これまでの流れ:\n" + "\n".join(f"• {s}" for s in cleaned_summaries)
 
-    # ハッシュタグ
-    hashtags = "$ONIAGI"
+    # 銘柄タグ
+    hashtags = ONIAGI_TAG
 
     # タイトル生成
     title = f"{author_name}の{tmpl['title']}"
@@ -368,11 +415,7 @@ def generate_smart_summary(
     # 引用ブロックを追加
     result += quote_block
     
-    # 全体を280文字に制限
-    if len(result) > 280:
-        result = result[:277] + "..."
-
-    return result
+    return ensure_oniagi_tag(result, max_length=280)
 
 
 def post_community_tweet(text: str, token: str, media_ids: Optional[list[str]] = None, quote_tweet_id: Optional[str] = None, reply_to_tweet_id: Optional[str] = None) -> dict:
