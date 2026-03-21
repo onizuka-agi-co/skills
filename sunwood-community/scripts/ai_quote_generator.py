@@ -352,8 +352,8 @@ def generate_smart_summary(
     return result
 
 
-def post_community_tweet(text: str, token: str, media_ids: Optional[list[str]] = None) -> dict:
-    """コミュニティに投稿（オプションで画像添付）"""
+def post_community_tweet(text: str, token: str, media_ids: Optional[list[str]] = None, quote_tweet_id: Optional[str] = None) -> dict:
+    """コミュニティに投稿（オプションで画像添付・引用リツイート）"""
     url = "https://api.x.com/2/tweets"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -363,6 +363,9 @@ def post_community_tweet(text: str, token: str, media_ids: Optional[list[str]] =
     
     if media_ids:
         payload["media"] = {"media_ids": media_ids}
+    
+    if quote_tweet_id:
+        payload["quote_tweet_id"] = quote_tweet_id
 
     with httpx.Client() as client:
         resp = client.post(url, headers=headers, json=payload)
@@ -456,15 +459,16 @@ def main():
         include_quote = not args.no_quote
         summary = generate_smart_summary(tweet_text, author_name, context, args.template, include_quote)
 
-        # 投稿テキスト構築
-        tweet_url = f"https://x.com/i/status/{tweet_id}"
-        quote_text = f"{summary}\n\n{tweet_url}"
+        # 投稿テキスト（URLは本文に含めず、引用リツイート形式で投稿）
+        quote_text = summary
 
         # プレビュー
         print("\n" + "=" * 40)
         print("📤 投稿内容:")
         print("=" * 40)
         print(quote_text)
+        if args.preview:
+            print(f"\n📎 引用ツイート: https://x.com/i/status/{tweet_id}")
         print("=" * 40 + "\n")
 
         if args.preview:
@@ -490,10 +494,23 @@ def main():
                 print(f"⚠️ 画像処理エラー: {e}")
                 print("📝 テキストのみで投稿します...")
 
-        # 投稿実行
-        result = post_community_tweet(quote_text, token, media_ids)
-        post_id = result.get("data", {}).get("id", "")
-        print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
+        # 投稿実行（引用リツイート形式を試行）
+        try:
+            result = post_community_tweet(quote_text, token, media_ids, quote_tweet_id=tweet_id)
+            post_id = result.get("data", {}).get("id", "")
+            print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
+        except Exception as e:
+            # community_id + quote_tweet_id の併用が403エラーの場合、URLを本文に含めて再投稿
+            if "403" in str(e) or "Forbidden" in str(e):
+                print("⚠️ 引用リツイート形式が禁止されているため、URLを本文に含めます...")
+                tweet_url = f"https://x.com/i/status/{tweet_id}"
+                quote_text_with_url = f"{quote_text}\n\n{tweet_url}"
+                result = post_community_tweet(quote_text_with_url, token, media_ids)
+                post_id = result.get("data", {}).get("id", "")
+                print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
+                quote_text = quote_text_with_url  # ログ保存用
+            else:
+                raise
 
         # ログ保存
         save_log(tweet, result, quote_text)
