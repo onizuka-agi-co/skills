@@ -28,6 +28,7 @@ ONIAGI_TAG = "$ONIAGI"
 LEGACY_TAGS = ("#ONIZUKA_AGI",)
 URL_LINE_RE = re.compile(r"^https?://\S+$")
 URL_RE = re.compile(r"https?://\S+")
+ESCAPED_CONTROL_SEQUENCE_RE = re.compile(r"\\[nrt]")
 
 
 def load_token() -> str:
@@ -73,8 +74,19 @@ def extract_urls(text: str) -> list[str]:
     return URL_RE.findall(text or "")
 
 
+def validate_no_literal_escape_sequences(text: str) -> None:
+    """Reject raw escaped control sequences like \\n in user-facing text."""
+    matches = sorted(set(ESCAPED_CONTROL_SEQUENCE_RE.findall(text or "")))
+    if matches:
+        raise ValueError(
+            "Post text must not contain raw escaped control sequences. "
+            f"Found: {', '.join(matches)}"
+        )
+
+
 def validate_main_post_text(text: str) -> None:
     """Main post bodies must not contain URLs."""
+    validate_no_literal_escape_sequences(text)
     urls = extract_urls(text)
     if urls:
         raise ValueError(
@@ -85,6 +97,7 @@ def validate_main_post_text(text: str) -> None:
 
 def validate_reply_text(text: str) -> None:
     """Each reply may contain at most one URL."""
+    validate_no_literal_escape_sequences(text)
     urls = extract_urls(text)
     if len(urls) > 1:
         raise ValueError(
