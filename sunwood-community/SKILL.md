@@ -52,7 +52,7 @@ GitHub event 用の依頼文テンプレート:
 
 ## 新機能：可視化画像添付 (--visual)
 
-`--visual`フラグを使用すると、nano-banana-2でポスト内容を可視化した画像を自動生成・添付します。
+`--visual`フラグを使用すると、`/prj/ai-agent-desktop-ubuntu/futodama-config/.openclaw/workspace/memory/docs/public/Onizuka_2k_delpmaspu.png` を参照画像として使い、nano-banana-2 edit ベースでポスト内容を可視化した図解画像を自動生成・添付します。
 
 ```bash
 # 可視化画像付きで投稿
@@ -67,11 +67,12 @@ uv run skills/sunwood-community/scripts/ai_quote_generator.py <ポストURL> --v
 
 **必要な環境変数:**
 - `FAL_KEY` - fal.ai APIキー（または`fal-key.txt`をworkspace直下に配置）
+- `SUNWOOD_VISUAL_REFERENCE_IMAGE` - 参照画像を差し替える場合のみ指定。未指定時は `Onizuka_2k_delpmaspu.png` を使う。
 
 **処理フロー:**
 1. ポスト内容を取得
 2. 文脈を分析して解説を生成（元ポストの引用を含む）
-3. nano-banana-2で可視化画像を生成
+3. nano-banana-2 edit で参照画像ベースの図解を生成
 4. 画像をXにアップロード
 5. media_ids付きでコミュニティに投稿
 
