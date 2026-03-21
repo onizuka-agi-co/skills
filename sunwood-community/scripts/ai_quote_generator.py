@@ -15,6 +15,7 @@ import json
 import os
 import re
 import sys
+import mimetypes
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -69,14 +70,16 @@ TEMPLATES = {
     },
 }
 
-# fal.ai API endpoint for nano-banana-2
+# fal.ai API endpoints for nano-banana-2
 FAL_API_URL = "https://fal.run/fal-ai/nano-banana-2"
+FAL_EDIT_API_URL = "https://fal.run/fal-ai/nano-banana/edit"
 
 # API key file locations for fal.ai
 FAL_KEY_FILES = [
     WORKSPACE_ROOT / "fal-key.txt",
     Path.home() / ".fal-key.txt",
 ]
+DEFAULT_VISUAL_REFERENCE_IMAGE = WORKSPACE_ROOT / "memory" / "docs" / "public" / "Onizuka_2k_delpmaspu.png"
 
 # キャラクターシートの特徴（Onizuka_2k_delpmaspu.png から抽出）
 CHARACTER_DESCRIPTION = """Chibi-style demon noble character with long dark blue hair tied in a high bun, red oni horns, pointed ears with red tassels, and vivid red eyes. Wears ornate red and black traditional robe with gold flame patterns, black undergarments, red sandals, and accessories including gold medallions on a belt, red tassel earrings, and red tassel details. Has a small fang, and holds a fireball with orange flames."""
@@ -95,32 +98,46 @@ def get_fal_key() -> Optional[str]:
     return None
 
 
-def generate_visual_image(prompt: str) -> str:
-    """Generate image using fal.ai nano-banana-2 API. Returns image URL."""
+def resolve_visual_reference_image() -> Optional[Path]:
+    """Resolve the local reference image used for visual generation."""
+    raw_path = os.environ.get("SUNWOOD_VISUAL_REFERENCE_IMAGE", str(DEFAULT_VISUAL_REFERENCE_IMAGE))
+    path = Path(raw_path).expanduser()
+    return path if path.exists() else None
+
+
+def image_path_to_data_uri(path: Path) -> str:
+    """Encode a local image as a data URI for fal.ai edit requests."""
+    mime_type, _ = mimetypes.guess_type(path.name)
+    mime_type = mime_type or "image/png"
+    encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+    return f"data:{mime_type};base64,{encoded}"
+
+
+def build_visual_prompt(prompt: str) -> str:
+    """Build a rough infographic prompt anchored on the Onizuka character sheet."""
+    cleaned_prompt = remove_urls(prompt)
+    return (
+        f"Use the provided character reference as the exact base character. "
+        f"Keep the face, hair, horns, outfit palette, and overall identity consistent. "
+        f"Create a rough infographic-style explanation image about: {cleaned_prompt}. "
+        f"Show 3 to 5 big visual points with icons, arrows, and simple diagram blocks. "
+        f"Avoid dense paragraphs and avoid tiny text. "
+        f"Make it readable at a glance for social posting. "
+        f"Style: bold editorial explainer, clean layout, warm red and black accents, practical and sketch-like."
+    )
+
+
+def request_fal_image(api_url: str, payload: dict) -> dict:
+    """Send an image generation request to fal.ai."""
     api_key = get_fal_key()
     if not api_key:
         raise ValueError(
             "FAL_KEY not found. Set FAL_KEY environment variable "
             "or create fal-key.txt in workspace root."
         )
-    
-    # キャラクターを登場させる図解プロンプト
-    enhanced_prompt = (
-        f"Create an infographic-style illustration featuring a {CHARACTER_DESCRIPTION}. "
-        f"The character is explaining or presenting: {prompt}. "
-        f"Style: modern, clean, infographic-like with soft colors, educational diagram aesthetic."
-    )
-    
-    payload = {
-        "prompt": enhanced_prompt,
-        "num_images": 1,
-        "aspect_ratio": "16:9",
-        "resolution": "1K",
-        "output_format": "png",
-    }
-    
+
     request = Request(
-        FAL_API_URL,
+        api_url,
         data=json.dumps(payload).encode("utf-8"),
         headers={
             "Authorization": f"Key {api_key}",
@@ -130,14 +147,48 @@ def generate_visual_image(prompt: str) -> str:
     
     try:
         with urlopen(request, timeout=120) as response:
-            result = json.loads(response.read().decode("utf-8"))
-            images = result.get("images", [])
-            if images:
-                return images[0].get("url")
-            raise ValueError("No image generated")
+            return json.loads(response.read().decode("utf-8"))
     except HTTPError as e:
         error_body = e.read().decode("utf-8")
         raise RuntimeError(f"FAL API error: {e.code} - {error_body}")
+
+
+def generate_visual_image(prompt: str) -> str:
+    """Generate an infographic image and return the image URL."""
+    enhanced_prompt = build_visual_prompt(prompt)
+    base_payload = {
+        "prompt": enhanced_prompt,
+        "num_images": 1,
+        "aspect_ratio": "16:9",
+        "resolution": "1K",
+        "output_format": "png",
+    }
+
+    reference_image = resolve_visual_reference_image()
+    if reference_image is not None:
+        edit_payload = dict(base_payload)
+        edit_payload["image_urls"] = [image_path_to_data_uri(reference_image)]
+        try:
+            result = request_fal_image(FAL_EDIT_API_URL, edit_payload)
+            images = result.get("images", [])
+            if images:
+                return images[0].get("url")
+            raise ValueError("No image generated from nano-banana-2 edit")
+        except Exception as exc:
+            print(f"⚠️ nano-banana-2 edit failed, falling back to text-to-image: {exc}")
+
+    fallback_prompt = (
+        f"Create an infographic-style illustration featuring a {CHARACTER_DESCRIPTION}. "
+        f"The character is explaining or presenting: {prompt}. "
+        f"Style: modern, clean, infographic-like with soft colors, educational diagram aesthetic."
+    )
+    fallback_payload = dict(base_payload)
+    fallback_payload["prompt"] = fallback_prompt
+    result = request_fal_image(FAL_API_URL, fallback_payload)
+    images = result.get("images", [])
+    if images:
+        return images[0].get("url")
+    raise ValueError("No image generated")
 
 
 def download_image(url: str) -> bytes:
@@ -305,6 +356,13 @@ def extract_urls(text: str) -> list[str]:
     return URL_RE.findall(text or "")
 
 
+def remove_urls(text: str) -> str:
+    """Remove URLs and normalize surrounding whitespace."""
+    without_urls = URL_RE.sub("", text or "")
+    without_blank_lines = re.sub(r"\n{3,}", "\n\n", without_urls)
+    return without_blank_lines.strip()
+
+
 def validate_main_post_text(text: str) -> None:
     """Main post bodies must not contain URLs."""
     urls = extract_urls(text)
@@ -386,7 +444,7 @@ def generate_smart_summary(
     tmpl = TEMPLATES.get(template, TEMPLATES["notable"])
 
     # 内容の要約（短縮）- Markdown記法を除去、100文字制限
-    tweet_text_clean = strip_markdown(tweet_text)
+    tweet_text_clean = remove_urls(strip_markdown(tweet_text))
     if len(tweet_text_clean) > 100:
         summary = tweet_text_clean[:100] + "..."
     else:
@@ -557,8 +615,14 @@ def main():
         if args.preview:
             print("🔍 プレビューモード: 投稿しません")
             if args.visual:
+                reference_image = resolve_visual_reference_image()
+                if reference_image:
+                    print(f"🖼️ 参照画像: {reference_image}")
+                    print("🧩 生成モード: nano-banana-2 edit")
+                else:
+                    print("🧩 生成モード: nano-banana-2 text-to-image fallback")
                 print("🎨 可視化画像プロンプト:")
-                print(f"   {tweet_text[:100]}")
+                print(f"   {build_visual_prompt(tweet_text)}")
             return
 
         # 画像生成とアップロード
@@ -566,6 +630,9 @@ def main():
         if args.visual:
             print("🎨 可視化画像を生成中...")
             try:
+                reference_image = resolve_visual_reference_image()
+                if reference_image:
+                    print(f"🖼️ 参照画像: {reference_image}")
                 image_url = generate_visual_image(tweet_text)
                 print(f"✅ 画像生成完了: {image_url}")
                 
