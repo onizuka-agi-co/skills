@@ -62,7 +62,7 @@ Bookmark 用の依頼文テンプレート:
 
 ## 新機能：可視化画像添付 (--visual)
 
-`--visual`フラグを使用すると、`/prj/ai-agent-desktop-ubuntu/futodama-config/.openclaw/workspace/memory/docs/public/Onizuka_2k_delpmaspu.png` を参照画像として使い、nano-banana-2 edit ベースでポスト内容を可視化した図解画像を自動生成・添付します。
+`--visual`フラグを使用すると、`memory/docs/public/Onizuka_2k_delpmaspu.png` を参照画像として使い、nano-banana-2 edit ベースでポスト内容を可視化した図解画像を自動生成・添付します。
 
 ```bash
 # 可視化画像付きで投稿

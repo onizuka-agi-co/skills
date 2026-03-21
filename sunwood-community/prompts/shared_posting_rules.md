@@ -8,5 +8,5 @@
 - リプライは URL だけ貼らず、何のリンクなのか、なぜ読む価値があるのかを短く補足してください。
 - 参照URLのリプライには、その論点や読む目的を1から2文で添えてください。
 - 投稿には、ざっくり内容が伝わる図解画像を必ず添付してください。
-- 図解画像は `/prj/ai-agent-desktop-ubuntu/futodama-config/.openclaw/workspace/memory/docs/public/Onizuka_2k_delpmaspu.png` を参照画像として使い、`nano-banana-2 edit` 系の手順で作成してください。
+- 図解画像は `memory/docs/public/Onizuka_2k_delpmaspu.png` を参照画像として使い、`nano-banana-2 edit` 系の手順で作成してください。
 - 図解画像は文字を詰め込みすぎず、3から5個の要点をアイコン、矢印、短いラベルで見せるラフな explainer にしてください。
