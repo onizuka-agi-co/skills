@@ -281,7 +281,7 @@ def analyze_context(tweet_text: str, author_name: str, recent_logs: list[dict]) 
     return context
 
 
-def ensure_oniagi_tag(text: str, max_length: int | None = None) -> str:
+def ensure_oniagi_tag(text: str) -> str:
     """Normalize legacy tags and guarantee that $ONIAGI is present."""
     normalized = (text or "").strip()
     for legacy_tag in LEGACY_TAGS:
@@ -296,32 +296,7 @@ def ensure_oniagi_tag(text: str, max_length: int | None = None) -> str:
         else:
             normalized = f"{normalized}\n\n{ONIAGI_TAG}" if normalized else ONIAGI_TAG
 
-    if max_length is None or len(normalized) <= max_length:
-        return normalized
-
-    lines = normalized.splitlines()
-    trailing_url = lines[-1].strip() if lines and URL_LINE_RE.match(lines[-1].strip()) else ""
-    suffix = f"\n\n{ONIAGI_TAG}"
-    if trailing_url:
-        suffix += f"\n\n{trailing_url}"
-
-    available = max_length - len(suffix)
-    if available <= 0:
-        return suffix.strip()
-
-    body_lines: list[str] = []
-    for index, line in enumerate(lines):
-        stripped = line.strip()
-        is_trailing_url = trailing_url and index == len(lines) - 1 and stripped == trailing_url
-        if stripped == ONIAGI_TAG or stripped in LEGACY_TAGS or is_trailing_url:
-            continue
-        body_lines.append(line)
-
-    body = "\n".join(body_lines).strip()
-    body = body[:available].rstrip()
-    if not body:
-        return suffix.strip()
-    return f"{body}{suffix}"
+    return normalized
 
 
 def generate_smart_summary(
@@ -415,7 +390,7 @@ def generate_smart_summary(
     # 引用ブロックを追加
     result += quote_block
     
-    return ensure_oniagi_tag(result, max_length=280)
+    return ensure_oniagi_tag(result)
 
 
 def post_community_tweet(text: str, token: str, media_ids: Optional[list[str]] = None, quote_tweet_id: Optional[str] = None, reply_to_tweet_id: Optional[str] = None) -> dict:
