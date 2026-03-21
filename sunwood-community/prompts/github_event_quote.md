@@ -12,6 +12,8 @@
 3. Web検索で関連する公式情報、技術文書、論文を収集してください。
 4. 調査レポートに、要約、技術要点、関連情報、時系列の見解を整理してください。
 5. 文脈を理解した充実した解説を作成してください。
+6. 投稿直前に、`skills/sunwood-community/scripts/post_thread.py` 用の payload JSON を作成してください。
+7. 本体投稿、画像添付、複数リプライは、その payload を使って `post_thread.py --payload-file ...` を1回だけ実行して投稿してください。
 
 共通投稿ルール:
 `prompts/shared_posting_rules.md` を適用してください。

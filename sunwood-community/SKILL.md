@@ -22,6 +22,9 @@ uv run skills/sunwood-community/scripts/ai_quote_generator.py <ポストURL>
 # 可視化画像付き投稿（NEW）
 uv run skills/sunwood-community/scripts/ai_quote_generator.py <ポストURL> --visual
 
+# 本体+画像+複数リプライを一括投稿（推奨）
+uv run skills/sunwood-community/scripts/post_thread.py --payload-file payload.json
+
 # プレビューのみ
 uv run skills/sunwood-community/scripts/ai_quote_generator.py <ポストURL> --preview
 ```
@@ -63,6 +66,8 @@ Bookmark 用の依頼文テンプレート:
 ## 新機能：可視化画像添付 (--visual)
 
 `--visual`フラグを使用すると、`memory/docs/public/Onizuka_2k_delpmaspu.png` を参照画像として使い、nano-banana-2 edit ベースでポスト内容を可視化した図解画像を自動生成・添付します。
+
+`--visual` 指定時は画像添付が必須です。画像生成またはアップロードに失敗した場合は、テキストのみで続行せずエラーにします。
 
 ```bash
 # 可視化画像付きで投稿
@@ -184,6 +189,44 @@ uv run skills/sunwood-community/scripts/ai_quote_generator.py <ポストURL> --n
 ```
 
 ## スクリプト一覧
+
+### post_thread.py - 本体+画像+複数リプライの一括投稿
+
+```bash
+uv run skills/sunwood-community/scripts/post_thread.py --payload-file payload.json
+uv run skills/sunwood-community/scripts/post_thread.py --payload-file payload.json --dry-run
+```
+
+推奨の投稿経路。`payload JSON` に本体、画像、複数リプライをまとめて渡し、1回の実行で投稿する。
+
+- 本体投稿には画像が必須
+- 本文に URL があるとエラー
+- 1リプライに複数 URL があるとエラー
+- `reply_to` で `main` または先行リプライを指定可能
+- 途中で失敗したら既に投稿したポストをロールバック削除
+
+最小 payload 例:
+
+```json
+{
+  "main_post": {
+    "text": "🔍 例の解説本文\n\n$ONIAGI",
+    "image_path": "memory/docs/public/example.png"
+  },
+  "replies": [
+    {
+      "id": "source",
+      "reply_to": "main",
+      "text": "📎 元ポスト\n論点確認用のリンクです。\nhttps://x.com/i/status/123"
+    },
+    {
+      "id": "docs",
+      "reply_to": "main",
+      "text": "🔗 公式情報\n仕様を確認したい場合はこちらです。\nhttps://example.com"
+    }
+  ]
+}
+```
 
 ### quote_to_community.py - 引用リツイート投稿
 

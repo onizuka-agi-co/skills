@@ -6,6 +6,8 @@
 3. 解説本文は、その調査レポートを元に組み立ててください。
 4. 図解画像は、その調査レポートを元に内容を抽出して作成してください。元ポスト原文をそのまま図解に流し込まないでください。
 5. 図解は日本語で作成してください。
+6. 投稿直前に、`skills/sunwood-community/scripts/post_thread.py` 用の payload JSON を作成してください。
+7. 本体投稿、画像添付、複数リプライは、その payload を使って `post_thread.py --payload-file ...` を1回だけ実行して投稿してください。
 
 共通投稿ルール:
 - `prompts/shared_posting_rules.md` を適用してください。
