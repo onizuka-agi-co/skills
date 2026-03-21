@@ -27,6 +27,7 @@ LOGS_DIR = Path(__file__).parent.parent / "logs"
 ONIAGI_TAG = "$ONIAGI"
 LEGACY_TAGS = ("#ONIZUKA_AGI",)
 URL_LINE_RE = re.compile(r"^https?://\S+$")
+URL_RE = re.compile(r"https?://\S+")
 
 
 def load_token() -> str:
@@ -67,14 +68,55 @@ def get_tweet(tweet_id: str, token: str) -> dict:
         return resp.json()
 
 
-def post_community_tweet(text: str, token: str) -> dict:
-    """コミュニティに投稿"""
+def extract_urls(text: str) -> list[str]:
+    """Extract raw URLs from text."""
+    return URL_RE.findall(text or "")
+
+
+def validate_main_post_text(text: str) -> None:
+    """Main post bodies must not contain URLs."""
+    urls = extract_urls(text)
+    if urls:
+        raise ValueError(
+            "Main post text must not contain URLs. "
+            f"Found {len(urls)} URL(s): {', '.join(urls)}"
+        )
+
+
+def validate_reply_text(text: str) -> None:
+    """Each reply may contain at most one URL."""
+    urls = extract_urls(text)
+    if len(urls) > 1:
+        raise ValueError(
+            "Reply text must not contain multiple URLs. "
+            f"Found {len(urls)} URL(s): {', '.join(urls)}"
+        )
+
+
+def build_source_reply_text(label: str, url: str, note: str) -> str:
+    """Build a single-link reply with a short explanation."""
+    reply_text = f"{label}\n{note.strip()}\n{url.strip()}"
+    validate_reply_text(reply_text)
+    return reply_text
+
+
+def post_community_tweet(text: str, token: str, *, reply_to_tweet_id: str | None = None, include_community: bool = True) -> dict:
+    """コミュニティに投稿、またはその投稿に返信"""
+    if reply_to_tweet_id:
+        validate_reply_text(text)
+    else:
+        validate_main_post_text(text)
+
     url = "https://api.x.com/2/tweets"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
-    payload = {"text": text, "community_id": COMMUNITY_ID}
+    payload = {"text": text}
+    if include_community:
+        payload["community_id"] = COMMUNITY_ID
+    if reply_to_tweet_id:
+        payload["reply"] = {"in_reply_to_tweet_id": reply_to_tweet_id}
 
     with httpx.Client() as client:
         resp = client.post(url, headers=headers, json=payload)
@@ -82,7 +124,7 @@ def post_community_tweet(text: str, token: str) -> dict:
         return resp.json()
 
 
-def save_log(original_tweet: dict, community_post: dict, quote_text: str):
+def save_log(original_tweet: dict, community_post: dict, quote_text: str, reply_post: dict | None = None, reply_text: str = ""):
     """投稿ログを保存"""
     now = datetime.now(timezone.utc)
     date_dir = LOGS_DIR / now.strftime("%Y-%m-%d")
@@ -104,6 +146,12 @@ def save_log(original_tweet: dict, community_post: dict, quote_text: str):
             "url": f"https://x.com/i/status/{community_post.get('data', {}).get('id', '')}",
         },
     }
+    if reply_post:
+        log_data["reply_post"] = {
+            "id": reply_post.get("data", {}).get("id", ""),
+            "text": reply_text,
+            "url": f"https://x.com/i/status/{reply_post.get('data', {}).get('id', '')}",
+        }
 
     with open(log_file, "w") as f:
         json.dump(log_data, f, ensure_ascii=False, indent=2)
@@ -142,13 +190,13 @@ def ensure_oniagi_tag(text: str) -> str:
     return normalized
 
 
-def build_quote_text(tweet_url: str, summary: str, template: str = "notable") -> str:
-    """引用投稿テキストを構築"""
+def build_quote_text(summary: str, template: str = "notable") -> str:
+    """本文用の投稿テキストを構築"""
     templates = {
-        "notable": f"🔍 注目ポスト解説\n\n{summary}\n\n{tweet_url}",
-        "news": f"📰 ニュース紹介\n\n{summary}\n\n{tweet_url}",
-        "tip": f"💡 Tips・豆知識\n\n{summary}\n\n{tweet_url}",
-        "simple": f"{summary}\n\n{tweet_url}",
+        "notable": f"🔍 注目ポスト解説\n\n{summary}",
+        "news": f"📰 ニュース紹介\n\n{summary}",
+        "tip": f"💡 Tips・豆知識\n\n{summary}",
+        "simple": summary,
     }
     return ensure_oniagi_tag(templates.get(template, templates["notable"]))
 
@@ -194,13 +242,22 @@ def main():
 
         # 投稿テキスト構築
         tweet_url = f"https://x.com/i/status/{tweet_id}"
-        quote_text = build_quote_text(tweet_url, summary, args.template)
+        quote_text = build_quote_text(summary, args.template)
+        reply_text = build_source_reply_text(
+            "📎 元ポスト",
+            tweet_url,
+            "元の投稿はここから確認できます。論点や温度感を直接たどるための参照リンクです。",
+        )
+        validate_main_post_text(quote_text)
+        validate_reply_text(reply_text)
 
         # プレビュー
         print("\n" + "=" * 40)
         print("📤 投稿内容:")
         print("=" * 40)
         print(quote_text)
+        print("\n↳ リプライ:")
+        print(reply_text)
         print("=" * 40 + "\n")
 
         if args.dry_run:
@@ -212,8 +269,16 @@ def main():
         post_id = result.get("data", {}).get("id", "")
         print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
 
+        reply_result = post_community_tweet(
+            reply_text,
+            token,
+            reply_to_tweet_id=post_id,
+        )
+        reply_id = reply_result.get("data", {}).get("id", "")
+        print(f"✅ 返信投稿: https://x.com/i/status/{reply_id}")
+
         # ログ保存
-        save_log(tweet, result, quote_text)
+        save_log(tweet, result, quote_text, reply_result, reply_text)
 
     except Exception as e:
         print(f"❌ エラー: {e}")
