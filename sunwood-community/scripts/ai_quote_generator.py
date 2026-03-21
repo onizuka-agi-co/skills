@@ -352,8 +352,8 @@ def generate_smart_summary(
     return result
 
 
-def post_community_tweet(text: str, token: str, media_ids: Optional[list[str]] = None, quote_tweet_id: Optional[str] = None) -> dict:
-    """コミュニティに投稿（オプションで画像添付・引用リツイート）"""
+def post_community_tweet(text: str, token: str, media_ids: Optional[list[str]] = None, quote_tweet_id: Optional[str] = None, reply_to_tweet_id: Optional[str] = None) -> dict:
+    """コミュニティに投稿（オプションで画像添付・引用リツイート・返信）"""
     url = "https://api.x.com/2/tweets"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -366,6 +366,9 @@ def post_community_tweet(text: str, token: str, media_ids: Optional[list[str]] =
     
     if quote_tweet_id:
         payload["quote_tweet_id"] = quote_tweet_id
+    
+    if reply_to_tweet_id:
+        payload["reply"] = {"in_reply_to_tweet_id": reply_to_tweet_id}
 
     with httpx.Client() as client:
         resp = client.post(url, headers=headers, json=payload)
@@ -500,14 +503,19 @@ def main():
             post_id = result.get("data", {}).get("id", "")
             print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
         except Exception as e:
-            # community_id + quote_tweet_id の併用が403エラーの場合、URLなしで再投稿
+            # community_id + quote_tweet_id の併用が403エラーの場合、返信としてURLを投稿
             if "403" in str(e) or "Forbidden" in str(e):
                 print("⚠️ 引用リツイート形式が禁止されています")
-                print(f"📎 元ツイートURL（コメント用）: https://x.com/i/status/{tweet_id}")
-                # URLを本文に含めず、テキストのみで投稿
+                # テキストのみで投稿
                 result = post_community_tweet(quote_text, token, media_ids)
                 post_id = result.get("data", {}).get("id", "")
-                print(f"✅ 投稿成功（URLなし）: https://x.com/i/status/{post_id}")
+                print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
+                
+                # 返信としてURLを投稿
+                tweet_url = f"https://x.com/i/status/{tweet_id}"
+                reply_result = post_community_tweet(tweet_url, token, reply_to_tweet_id=post_id)
+                reply_id = reply_result.get("data", {}).get("id", "")
+                print(f"✅ 返信投稿（URL）: https://x.com/i/status/{reply_id}")
             else:
                 raise
 
