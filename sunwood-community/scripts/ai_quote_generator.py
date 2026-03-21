@@ -33,6 +33,7 @@ LOGS_DIR = Path(__file__).parent.parent / "logs"
 ONIAGI_TAG = "$ONIAGI"
 LEGACY_TAGS = ("#ONIZUKA_AGI",)
 URL_LINE_RE = re.compile(r"^https?://\S+$")
+URL_RE = re.compile(r"https?://\S+")
 
 # テンプレート定義（XはMarkdown非対応のため**は使用しない）
 TEMPLATES = {
@@ -299,6 +300,38 @@ def ensure_oniagi_tag(text: str) -> str:
     return normalized
 
 
+def extract_urls(text: str) -> list[str]:
+    """Extract raw URLs from text."""
+    return URL_RE.findall(text or "")
+
+
+def validate_main_post_text(text: str) -> None:
+    """Main post bodies must not contain URLs."""
+    urls = extract_urls(text)
+    if urls:
+        raise ValueError(
+            "Main post text must not contain URLs. "
+            f"Found {len(urls)} URL(s): {', '.join(urls)}"
+        )
+
+
+def validate_reply_text(text: str) -> None:
+    """Each reply may contain at most one URL."""
+    urls = extract_urls(text)
+    if len(urls) > 1:
+        raise ValueError(
+            "Reply text must not contain multiple URLs. "
+            f"Found {len(urls)} URL(s): {', '.join(urls)}"
+        )
+
+
+def build_source_reply_text(label: str, url: str, note: str) -> str:
+    """Build a single-link reply with a short explanation."""
+    reply_text = f"{label}\n{note.strip()}\n{url.strip()}"
+    validate_reply_text(reply_text)
+    return reply_text
+
+
 def generate_smart_summary(
     tweet_text: str, author_name: str, context: dict, template: str = "notable", include_quote: bool = True
 ) -> str:
@@ -395,6 +428,11 @@ def generate_smart_summary(
 
 def post_community_tweet(text: str, token: str, media_ids: Optional[list[str]] = None, quote_tweet_id: Optional[str] = None, reply_to_tweet_id: Optional[str] = None) -> dict:
     """コミュニティに投稿（オプションで画像添付・引用リツイート・返信）"""
+    if reply_to_tweet_id:
+        validate_reply_text(text)
+    else:
+        validate_main_post_text(text)
+
     url = "https://api.x.com/2/tweets"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -505,6 +543,7 @@ def main():
 
         # 投稿テキスト（URLは本文に含めず、引用リツイート形式で投稿）
         quote_text = summary
+        validate_main_post_text(quote_text)
 
         # プレビュー
         print("\n" + "=" * 40)
@@ -570,8 +609,13 @@ def main():
                     
                     # 返信としてURLを投稿
                     tweet_url = f"https://x.com/i/status/{tweet_id}"
+                    reply_text = build_source_reply_text(
+                        "📎 元ポスト",
+                        tweet_url,
+                        "元の投稿を確認したい場合はこちらです。論点と文脈を直接たどれます。",
+                    )
                     reply_payload = {
-                        "text": f"📎 元ポスト\n{tweet_url}",
+                        "text": reply_text,
                         "reply": {"in_reply_to_tweet_id": post_id}
                     }
                     
