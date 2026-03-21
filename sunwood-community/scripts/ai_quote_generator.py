@@ -71,6 +71,9 @@ FAL_KEY_FILES = [
     Path.home() / ".fal-key.txt",
 ]
 
+# キャラクターシートの特徴（Onizuka_2k_delpmaspu.png から抽出）
+CHARACTER_DESCRIPTION = """Chibi-style demon noble character with long dark blue hair tied in a high bun, red oni horns, pointed ears with red tassels, and vivid red eyes. Wears ornate red and black traditional robe with gold flame patterns, black undergarments, red sandals, and accessories including gold medallions on a belt, red tassel earrings, and red tassel details. Has a small fang, and holds a fireball with orange flames."""
+
 
 def get_fal_key() -> Optional[str]:
     """Get fal.ai API key from file or environment."""
@@ -94,8 +97,12 @@ def generate_visual_image(prompt: str) -> str:
             "or create fal-key.txt in workspace root."
         )
     
-    # 日本語プロンプトを英語に変換するヒントを追加
-    enhanced_prompt = f"Create a visually appealing explanation image for: {prompt}. Style: modern, clean, infographic-like with soft colors."
+    # キャラクターを登場させる図解プロンプト
+    enhanced_prompt = (
+        f"Create an infographic-style illustration featuring a {CHARACTER_DESCRIPTION}. "
+        f"The character is explaining or presenting: {prompt}. "
+        f"Style: modern, clean, infographic-like with soft colors, educational diagram aesthetic."
+    )
     
     payload = {
         "prompt": enhanced_prompt,
