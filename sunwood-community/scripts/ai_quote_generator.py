@@ -135,32 +135,54 @@ def download_image(url: str) -> bytes:
 
 def upload_media_to_x(image_url: str, token: str) -> str:
     """Upload image to X and return media_id."""
+    import uuid
+    import mimetypes
+    
     # Download image
     image_data = download_image(image_url)
     
-    # Upload to X using v1.1 media/upload
-    url = "https://api.x.com/1.1/media/upload.json"
-    headers = {
-        "Authorization": f"Bearer {token}",
-    }
+    # Upload to X using v2 media/upload API
+    url = "https://api.x.com/2/media/upload"
     
     # Prepare multipart form data
-    boundary = "----ONIZUKA_AGI_BOUNDARY"
-    body = (
-        f"--{boundary}\r\n"
-        f'Content-Disposition: form-data; name="media"; filename="visual.png"\r\n'
-        f"Content-Type: image/png\r\n\r\n"
-    ).encode("utf-8")
-    body += image_data
-    body += f"\r\n--{boundary}--\r\n".encode("utf-8")
+    boundary = uuid.uuid4().hex
     
-    headers["Content-Type"] = f"multipart/form-data; boundary={boundary}"
+    body_parts = []
+    
+    # Add media_category field
+    body_parts.append(f'--{boundary}'.encode())
+    body_parts.append(f'Content-Disposition: form-data; name="media_category"'.encode())
+    body_parts.append(b'')
+    body_parts.append(b'tweet_image')
+    
+    # Add media file
+    body_parts.append(f'--{boundary}'.encode())
+    body_parts.append(
+        f'Content-Disposition: form-data; name="media"; filename="visual.png"'.encode()
+    )
+    body_parts.append(b'Content-Type: image/png')
+    body_parts.append(b'')
+    body_parts.append(image_data)
+    
+    body_parts.append(f'--{boundary}--'.encode())
+    body_parts.append(b'')
+    
+    body = b'\r\n'.join(body_parts)
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": f"multipart/form-data; boundary={boundary}",
+    }
     
     with httpx.Client() as client:
         resp = client.post(url, headers=headers, content=body)
         resp.raise_for_status()
         result = resp.json()
-        return result.get("media_id_string")
+        
+        # v2 API returns {"data": {"id": "..."}}
+        if 'data' in result and 'id' in result['data']:
+            return result['data']['id']
+        raise ValueError(f"Upload failed: {result}")
 
 
 def load_token() -> str:
