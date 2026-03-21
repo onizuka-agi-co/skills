@@ -523,12 +523,16 @@ def main():
             # community_id + quote_tweet_id の併用がエラーの場合
             error_str = str(e)
             if "403" in error_str or "400" in error_str or "Forbidden" in error_str or "Bad Request" in error_str:
-                print(f"⚠️ 引用リツイート形式が禁止されています")
+                print("⚠️ 引用リツイート形式が禁止されています")
                 # テキストのみで投稿（URLは本文に含めない）
-                result = post_community_tweet(quote_text, token, media_ids)
-                post_id = result.get("data", {}).get("id", "")
-                print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
-                print(f"📎 元ツイート: https://x.com/i/status/{tweet_id}")
+                try:
+                    result = post_community_tweet(quote_text, token, media_ids)
+                    post_id = result.get("data", {}).get("id", "")
+                    print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
+                    print(f"📎 元ツイート: https://x.com/i/status/{tweet_id}")
+                except Exception as e2:
+                    print(f"❌ 再投稿エラー: {e2}")
+                    raise
             else:
                 raise
 
