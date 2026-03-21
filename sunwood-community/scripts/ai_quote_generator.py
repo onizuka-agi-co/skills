@@ -528,12 +528,41 @@ def main():
             error_str = str(e)
             if "403" in error_str or "400" in error_str or "Forbidden" in error_str or "Bad Request" in error_str:
                 print("⚠️ 引用リツイート形式が禁止されています")
-                # テキストのみで投稿（URLは本文に含めない）
+                # 通常ツイートとして投稿（コミュニティなし）して返信可能にする
                 try:
-                    result = post_community_tweet(quote_text, token, media_ids)
+                    # コミュニティなしで投稿
+                    normal_tweet_url = "https://api.x.com/2/tweets"
+                    headers = {
+                        "Authorization": f"Bearer {token}",
+                        "Content-Type": "application/json",
+                    }
+                    normal_payload = {"text": quote_text}
+                    if media_ids:
+                        normal_payload["media"] = {"media_ids": media_ids}
+                    
+                    with httpx.Client() as client:
+                        resp = client.post(normal_tweet_url, headers=headers, json=normal_payload)
+                        resp.raise_for_status()
+                        result = resp.json()
+                    
                     post_id = result.get("data", {}).get("id", "")
-                    print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
-                    print(f"📎 元ツイート: https://x.com/i/status/{tweet_id}")
+                    print(f"✅ 投稿成功（通常ツイート）: https://x.com/i/status/{post_id}")
+                    
+                    # 返信としてURLを投稿
+                    tweet_url = f"https://x.com/i/status/{tweet_id}"
+                    reply_payload = {
+                        "text": f"📎 元ポスト\n{tweet_url}",
+                        "reply": {"in_reply_to_tweet_id": post_id}
+                    }
+                    
+                    with httpx.Client() as client:
+                        resp = client.post(normal_tweet_url, headers=headers, json=reply_payload)
+                        resp.raise_for_status()
+                        reply_result = resp.json()
+                    
+                    reply_id = reply_result.get("data", {}).get("id", "")
+                    print(f"✅ 返信投稿: https://x.com/i/status/{reply_id}")
+                    
                 except Exception as e2:
                     print(f"❌ 再投稿エラー: {e2}")
                     raise
