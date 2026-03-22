@@ -79,23 +79,50 @@ def get_rules() -> dict:
     return response.json()
 
 
-def setup_rules():
-    """Setup monitoring rules."""
+def setup_rules(force: bool = False):
+    """Setup monitoring rules.
+    
+    Args:
+        force: If True, always reset rules. If False, skip if correct rules exist.
+    """
+    expected_rule_value = f"from:{TARGET_USER} -is:retweet -is:reply"
+    expected_tag = f"{TARGET_USER}_new_posts"
+    
+    # Check if correct rules already exist
+    if not force:
+        rules = get_rules()
+        if "data" in rules:
+            for rule in rules["data"]:
+                if (rule.get("value") == expected_rule_value and 
+                    rule.get("tag") == expected_tag):
+                    print(f"✅ Rules already configured correctly, skipping setup")
+                    return True
+    
     # Clear existing rules
     rules = get_rules()
     if "data" in rules:
         ids = [rule["id"] for rule in rules["data"]]
         payload = {"delete": {"ids": ids}}
-        requests.post(RULES_URL, headers=get_headers(), json=payload)
+        response = requests.post(RULES_URL, headers=get_headers(), json=payload)
+        if response.status_code == 429:
+            print(f"⚠️ Rate limit hit while clearing rules, waiting 60s...")
+            time.sleep(60)
+            return False
         print(f"Cleared {len(ids)} existing rules")
+        time.sleep(1)  # Small delay to avoid rate limit
     
     # Add new rules
     new_rules = [
-        {"value": f"from:{TARGET_USER} -is:retweet -is:reply", "tag": f"{TARGET_USER}_new_posts"},
+        {"value": expected_rule_value, "tag": expected_tag},
     ]
     
     payload = {"add": new_rules}
     response = requests.post(RULES_URL, headers=get_headers(), json=payload)
+    
+    if response.status_code == 429:
+        print(f"⚠️ Rate limit hit while adding rules, waiting 60s...")
+        time.sleep(60)
+        return False
     
     if "errors" in response.json():
         print(f"Error setting rules: {response.json()['errors']}")
@@ -199,13 +226,16 @@ def process_tweet(tweet: dict):
         print(f"❌ Failed to post explanation: {result.get('error')}")
 
 
-def stream_tweets():
-    """Start streaming tweets."""
+def stream_tweets(retry_count: int = 0):
+    """Start streaming tweets with exponential backoff on errors."""
+    max_retries = 5
+    base_delay = 10  # seconds
+    
     print(f"🐦 X Auto Explain Bot Starting...")
     print(f"📌 Monitoring: @{TARGET_USER}")
     print(f"{'='*60}")
     
-    # Setup rules
+    # Setup rules (skip if already configured)
     if not setup_rules():
         print("Failed to setup rules")
         return
@@ -224,12 +254,29 @@ def stream_tweets():
             timeout=(10, 90)
         )
         
+        if response.status_code == 429:
+            # Rate limit - exponential backoff
+            delay = base_delay * (2 ** retry_count)
+            print(f"⚠️ Rate limited (429), waiting {delay}s before retry...")
+            time.sleep(delay)
+            if retry_count < max_retries:
+                stream_tweets(retry_count + 1)
+            return
+        
         if response.status_code != 200:
             print(f"Error: {response.status_code}")
             print(response.text)
+            # Exponential backoff for other errors
+            delay = base_delay * (2 ** retry_count)
+            print(f"Waiting {delay}s before retry...")
+            time.sleep(delay)
+            if retry_count < max_retries:
+                stream_tweets(retry_count + 1)
             return
         
         print(f"✅ Connected! Status: {response.status_code}")
+        # Reset retry count on successful connection
+        retry_count = 0
         
         for line in response.iter_lines():
             if not line:
@@ -251,13 +298,16 @@ def stream_tweets():
     except requests.exceptions.Timeout:
         print("Connection timeout, reconnecting...")
         time.sleep(5)
-        stream_tweets()
+        stream_tweets(retry_count)
     except KeyboardInterrupt:
         print("\n\n🛑 Stream stopped by user")
     except Exception as e:
         print(f"Stream error: {e}")
-        time.sleep(10)
-        stream_tweets()
+        delay = base_delay * (2 ** retry_count)
+        print(f"Waiting {delay}s before retry...")
+        time.sleep(delay)
+        if retry_count < max_retries:
+            stream_tweets(retry_count + 1)
 
 
 def test_bot():
