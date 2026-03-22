@@ -36,12 +36,14 @@ Payload schema:
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import mimetypes
 import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -51,7 +53,10 @@ from typing import Any
 COMMUNITY_ID = "2010195061309587967"
 WORKSPACE_ROOT = Path(__file__).parent.parent.parent.parent
 DATA_X_DIR = WORKSPACE_ROOT / "data" / "x"
-TOKEN_FILE = Path(os.environ.get("SUNWOOD_COMMUNITY_TOKEN_FILE", str(DATA_X_DIR / "x-tokens.json")))
+HOST_CONFIG_DATA_DIR = WORKSPACE_ROOT.parent.parent / "x-filtered-stream" / "data"
+CONTAINER_CONFIG_DATA_DIR = Path("/config/x-filtered-stream/data")
+TOKEN_ENV_VAR = "SUNWOOD_COMMUNITY_TOKEN_FILE"
+CLIENT_CREDENTIALS_ENV_VAR = "SUNWOOD_COMMUNITY_CLIENT_CREDENTIALS_FILE"
 LOGS_DIR = Path(__file__).parent.parent / "logs"
 ONIAGI_TAG = "$ONIAGI"
 LEGACY_TAGS = ("#ONIZUKA_AGI",)
@@ -60,17 +65,145 @@ URL_RE = re.compile(r"https?://\S+")
 ESCAPED_CONTROL_SEQUENCE_RE = re.compile(r"\\[nrt]")
 
 
-def load_token() -> str:
-    if not TOKEN_FILE.exists():
-        raise FileNotFoundError(f"Token file not found: {TOKEN_FILE}")
+def unique_paths(paths: list[Path]) -> list[Path]:
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for path in paths:
+        key = str(path)
+        if key not in seen:
+            unique.append(path)
+            seen.add(key)
+    return unique
 
-    with open(TOKEN_FILE, encoding="utf-8") as handle:
-        data = json.load(handle)
 
-    token = data.get("access_token", "")
+def resolve_data_file(env_var: str, default_name: str) -> Path:
+    candidates: list[Path] = []
+    env_value = os.environ.get(env_var)
+    if env_value:
+        candidates.append(Path(env_value).expanduser())
+
+    candidates.extend(
+        [
+            DATA_X_DIR / default_name,
+            CONTAINER_CONFIG_DATA_DIR / default_name,
+            HOST_CONFIG_DATA_DIR / default_name,
+        ]
+    )
+
+    for candidate in unique_paths(candidates):
+        if candidate.exists():
+            return candidate
+
+    raise FileNotFoundError(
+        f"{default_name} not found. Checked env {env_var} and: "
+        + ", ".join(str(path) for path in unique_paths(candidates))
+    )
+
+
+def load_json(path: Path) -> dict[str, Any]:
+    with open(path, encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def save_json(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(data, handle, ensure_ascii=False, indent=2)
+
+
+def compute_expires_at(token_data: dict[str, Any]) -> float | None:
+    raw_expires_at = token_data.get("expires_at")
+    if isinstance(raw_expires_at, (int, float)):
+        return float(raw_expires_at)
+
+    expires_in = token_data.get("expires_in")
+    obtained_at = token_data.get("obtained_at")
+    if isinstance(expires_in, (int, float)) and isinstance(obtained_at, (int, float)):
+        return float(obtained_at) + float(expires_in)
+
+    return None
+
+
+def is_token_expired(token_data: dict[str, Any]) -> bool:
+    expires_at = compute_expires_at(token_data)
+    if expires_at is None:
+        return False
+    return datetime.now(timezone.utc).timestamp() > (expires_at - 300)
+
+
+def refresh_access_token(
+    token_file: Path,
+    credentials_file: Path,
+    token_data: dict[str, Any],
+) -> dict[str, Any]:
+    refresh_token = token_data.get("refresh_token")
+    if not refresh_token:
+        raise ValueError(f"refresh_token is missing in {token_file}")
+
+    credentials = load_json(credentials_file)
+    client_id = credentials.get("client_id")
+    client_secret = credentials.get("client_secret")
+    if not client_id or not client_secret:
+        raise ValueError(f"client_id/client_secret are missing in {credentials_file}")
+
+    basic_auth = base64.b64encode(f"{client_id}:{client_secret}".encode("utf-8")).decode("ascii")
+    body = urllib.parse.urlencode(
+        {
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+        }
+    ).encode("utf-8")
+    request = urllib.request.Request(
+        "https://api.x.com/2/oauth2/token",
+        data=body,
+        headers={
+            "Authorization": f"Basic {basic_auth}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=60) as response:
+        refreshed = json.loads(response.read().decode("utf-8"))
+
+    refreshed["obtained_at"] = int(datetime.now(timezone.utc).timestamp())
+    if "expires_in" in refreshed and "expires_at" not in refreshed:
+        refreshed["expires_at"] = refreshed["obtained_at"] + int(refreshed["expires_in"])
+    save_json(token_file, refreshed)
+    return refreshed
+
+
+def load_token_context() -> dict[str, Any]:
+    token_file = resolve_data_file(TOKEN_ENV_VAR, "x-tokens.json")
+    token_data = load_json(token_file)
+    if "access_token" not in token_data:
+        raise ValueError(f"access_token is missing in {token_file}")
+
+    credentials_file = resolve_data_file(CLIENT_CREDENTIALS_ENV_VAR, "x-client-credentials.json")
+    return {
+        "token_file": token_file,
+        "credentials_file": credentials_file,
+        "token_data": token_data,
+    }
+
+
+def ensure_valid_token(context: dict[str, Any], *, force_refresh: bool = False) -> str:
+    token_data = context["token_data"]
+    if force_refresh or is_token_expired(token_data):
+        token_data = refresh_access_token(
+            context["token_file"],
+            context["credentials_file"],
+            token_data,
+        )
+        context["token_data"] = token_data
+
+    token = token_data.get("access_token", "")
     if not token:
-        raise ValueError(f"access_token is missing in {TOKEN_FILE}")
+        raise ValueError(f"access_token is missing in {context['token_file']}")
     return token
+
+
+def load_token() -> dict[str, Any]:
+    return load_token_context()
 
 
 def extract_urls(text: str) -> list[str]:
@@ -167,24 +300,43 @@ def load_media_source(main_post: dict[str, Any], *, base_dir: Path) -> tuple[byt
     return content, resolved.name, content_type, str(resolved)
 
 
-def api_request(method: str, endpoint: str, token: str, *, data: dict[str, Any] | None = None) -> dict[str, Any]:
+def api_request(
+    method: str,
+    endpoint: str,
+    token_context: dict[str, Any],
+    *,
+    data: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     url = f"https://api.x.com{endpoint}"
-    headers = {"Authorization": f"Bearer {token}"}
-    body = None
-    if data is not None:
-        headers["Content-Type"] = "application/json"
-        body = json.dumps(data).encode("utf-8")
+    attempts = [False, True]
+    for force_refresh in attempts:
+        token = ensure_valid_token(token_context, force_refresh=force_refresh)
+        headers = {"Authorization": f"Bearer {token}"}
+        body = None
+        if data is not None:
+            headers["Content-Type"] = "application/json"
+            body = json.dumps(data).encode("utf-8")
 
-    request = urllib.request.Request(url, data=body, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(request, timeout=60) as response:
-            return json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        error_body = exc.read().decode("utf-8")
-        raise RuntimeError(f"API error: {exc.code} - {error_body}") from exc
+        request = urllib.request.Request(url, data=body, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            error_body = exc.read().decode("utf-8")
+            if exc.code == 401 and not force_refresh:
+                continue
+            raise RuntimeError(f"API error: {exc.code} - {error_body}") from exc
+
+    raise RuntimeError("API request failed after token refresh retry.")
 
 
-def multipart_upload(url: str, token: str, *, fields: dict[str, Any], files: dict[str, tuple[str, bytes, str]]) -> dict[str, Any]:
+def multipart_upload(
+    url: str,
+    token_context: dict[str, Any],
+    *,
+    fields: dict[str, Any],
+    files: dict[str, tuple[str, bytes, str]],
+) -> dict[str, Any]:
     import uuid
 
     boundary = uuid.uuid4().hex
@@ -209,27 +361,39 @@ def multipart_upload(url: str, token: str, *, fields: dict[str, Any], files: dic
     body_parts.append(b"")
     body = b"\r\n".join(body_parts)
 
-    request = urllib.request.Request(
-        url,
-        data=body,
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type": f"multipart/form-data; boundary={boundary}",
-        },
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=120) as response:
-            return json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        error_body = exc.read().decode("utf-8")
-        raise RuntimeError(f"Upload error: {exc.code} - {error_body}") from exc
+    attempts = [False, True]
+    for force_refresh in attempts:
+        token = ensure_valid_token(token_context, force_refresh=force_refresh)
+        request = urllib.request.Request(
+            url,
+            data=body,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": f"multipart/form-data; boundary={boundary}",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=120) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            error_body = exc.read().decode("utf-8")
+            if exc.code == 401 and not force_refresh:
+                continue
+            raise RuntimeError(f"Upload error: {exc.code} - {error_body}") from exc
+
+    raise RuntimeError("Upload failed after token refresh retry.")
 
 
-def upload_media(content: bytes, filename: str, content_type: str, token: str) -> str:
+def upload_media(
+    content: bytes,
+    filename: str,
+    content_type: str,
+    token_context: dict[str, Any],
+) -> str:
     result = multipart_upload(
         "https://api.x.com/2/media/upload",
-        token,
+        token_context,
         fields={"media_category": "tweet_image"},
         files={"media": (filename, content, content_type)},
     )
@@ -241,7 +405,7 @@ def upload_media(content: bytes, filename: str, content_type: str, token: str) -
 
 def post_tweet(
     text: str,
-    token: str,
+    token_context: dict[str, Any],
     *,
     media_ids: list[str] | None = None,
     reply_to_tweet_id: str | None = None,
@@ -258,18 +422,18 @@ def post_tweet(
     if reply_to_tweet_id:
         payload["reply"] = {"in_reply_to_tweet_id": reply_to_tweet_id}
 
-    return api_request("POST", "/2/tweets", token, data=payload)
+    return api_request("POST", "/2/tweets", token_context, data=payload)
 
 
-def delete_tweet(tweet_id: str, token: str) -> None:
-    api_request("DELETE", f"/2/tweets/{tweet_id}", token)
+def delete_tweet(tweet_id: str, token_context: dict[str, Any]) -> None:
+    api_request("DELETE", f"/2/tweets/{tweet_id}", token_context)
 
 
-def fetch_media_keys(tweet_id: str, token: str) -> list[str]:
+def fetch_media_keys(tweet_id: str, token_context: dict[str, Any]) -> list[str]:
     result = api_request(
         "GET",
         f"/2/tweets/{tweet_id}?tweet.fields=attachments",
-        token,
+        token_context,
     )
     attachments = result.get("data", {}).get("attachments", {})
     return attachments.get("media_keys", []) or []
@@ -380,10 +544,10 @@ def save_log(
     return log_file
 
 
-def rollback_posts(created_post_ids: list[str], token: str) -> None:
+def rollback_posts(created_post_ids: list[str], token_context: dict[str, Any]) -> None:
     for tweet_id in reversed(created_post_ids):
         try:
-            delete_tweet(tweet_id, token)
+            delete_tweet(tweet_id, token_context)
             print(f"↩️ Deleted posted tweet during rollback: {tweet_id}")
         except Exception as exc:
             print(f"⚠️ Rollback failed for {tweet_id}: {exc}")
@@ -394,6 +558,8 @@ def print_summary(
     *,
     payload_file: Path,
     image_source: str,
+    token_file: Path | None = None,
+    credentials_file: Path | None = None,
     main_post_result: dict[str, Any] | None = None,
     reply_results: list[dict[str, Any]] | None = None,
     log_file: Path | None = None,
@@ -409,6 +575,8 @@ def print_summary(
         "main_post_url": None,
         "reply_urls": [],
         "log_file": str(log_file) if log_file else None,
+        "token_file": str(token_file) if token_file else None,
+        "credentials_file": str(credentials_file) if credentials_file else None,
     }
     if main_post_result is not None:
         main_id = main_post_result.get("data", {}).get("id", "")
@@ -449,18 +617,20 @@ def main() -> None:
             payload,
             payload_file=payload_file,
             image_source=image_source,
+            token_file=resolve_data_file(TOKEN_ENV_VAR, "x-tokens.json"),
+            credentials_file=resolve_data_file(CLIENT_CREDENTIALS_ENV_VAR, "x-client-credentials.json"),
             dry_run=True,
         )
         return
 
-    token = load_token()
+    token_context = load_token()
     created_post_ids: list[str] = []
     rollback_on_failure = not args.no_rollback
     main_post_result: dict[str, Any] | None = None
     reply_results: list[dict[str, Any]] = []
 
     try:
-        media_id = upload_media(image_content, image_name, image_type, token)
+        media_id = upload_media(image_content, image_name, image_type, token_context)
         if not media_id:
             raise ValueError("Main post image upload did not return a media_id.")
 
@@ -471,7 +641,7 @@ def main() -> None:
 
         main_post_result = post_tweet(
             main_post["text"],
-            token,
+            token_context,
             media_ids=[media_id],
             community_id=community_id,
             share_with_followers=bool(main_post.get("share_with_followers", False)),
@@ -481,7 +651,7 @@ def main() -> None:
             raise ValueError("Main post did not return a tweet id.")
         created_post_ids.append(main_post_id)
 
-        media_keys = fetch_media_keys(main_post_id, token)
+        media_keys = fetch_media_keys(main_post_id, token_context)
         if not media_keys:
             raise ValueError("Main post was created without attached media.")
 
@@ -490,7 +660,7 @@ def main() -> None:
             parent_id = posted_ids[reply["reply_to"]]
             result = post_tweet(
                 reply["text"],
-                token,
+                token_context,
                 reply_to_tweet_id=parent_id,
                 community_id=community_id,
                 share_with_followers=False,
@@ -513,13 +683,15 @@ def main() -> None:
             payload,
             payload_file=payload_file,
             image_source=image_source,
+            token_file=token_context["token_file"],
+            credentials_file=token_context["credentials_file"],
             main_post_result=main_post_result,
             reply_results=reply_results,
             log_file=log_file,
         )
     except Exception:
         if rollback_on_failure and created_post_ids:
-            rollback_posts(created_post_ids, token)
+            rollback_posts(created_post_ids, token_context)
         raise
 
 
