@@ -118,20 +118,18 @@ def build_visual_prompt(prompt: str) -> str:
     """Build a rough infographic prompt anchored on the Onizuka character sheet."""
     cleaned_prompt = remove_urls(prompt)
     return (
-        "参照画像のキャラクターをそのままベースに使ってください。 "
-        "顔、髪、角、衣装の配色、全体の印象は維持してください。 "
-        "次の原文は参考資料です。内容を理解したうえで、日本語で言い換えてから図解してください。 "
-        "英語の原文は画像にそのまま入れないでください。 "
-        "固有名詞、製品名、リポジトリ名以外は日本語にしてください。 "
-        f"参考原文: {cleaned_prompt}. "
-        "ざっくり内容が伝わるラフな図解にしてください。 "
-        "3から5個の要点を、アイコン、矢印、短いラベル、シンプルな図解ブロックで見せてください。 "
-        "図解内の見出し、ラベル、補足文、短い説明文はすべて自然な日本語にしてください。 "
-        "画像内テキストは日本語のみを基本にしてください。 "
-        "英語原文をそのまま画像内に配置しないでください。概念を日本語で短く言い換えてください。 "
-        "見出しは「概要」「ポイント」「用途」「性能」「注目点」など日本語にしてください。 "
-        "文字を詰め込みすぎず、一目で読める密度にしてください。 "
-        "スタイルは、赤と黒を基調にした実用的な editorial explainer で、少しラフな図解調にしてください。"
+        "Use the character in the reference image as the visual base. "
+        "Keep the face, hair, horns, outfit colors, and overall mood recognizable. "
+        "The following source text is reference material only. Understand it first, then rewrite the ideas into concise English for the diagram. "
+        "Do not paste long raw source sentences into the image. "
+        f"Reference material: {cleaned_prompt}. "
+        "Create a rough explainer infographic that communicates the core idea at a glance. "
+        "Show 3 to 5 key points using icons, arrows, short labels, and simple diagram blocks. "
+        "All headings, labels, captions, and short descriptions inside the image must be in natural English. "
+        "Use short English phrases such as Overview, Key Points, Workflow, Performance, Use Cases, or Why It Matters. "
+        "Avoid mojibake-prone dense text. Keep wording short, legible, and presentation-friendly. "
+        "Do not overcrowd the layout. "
+        "Use a practical editorial explainer style with a red-and-black palette and a slightly rough diagram feel."
     )
 
 
@@ -186,10 +184,11 @@ def generate_visual_image(prompt: str) -> str:
             print(f"⚠️ nano-banana-2 edit failed, falling back to text-to-image: {exc}")
 
     fallback_prompt = (
-        f"{CHARACTER_DESCRIPTION} の要素を持つキャラクターが、次の内容を日本語で図解している画像を作ってください: {remove_urls(prompt)}. "
-        "英語原文をそのまま入れず、内容を理解して日本語の見出しと短いラベルに言い換えてください。 "
-        "3から5個の要点を、アイコン、矢印、短いラベルで整理したラフな explainer にしてください。 "
-        "赤と黒を基調にした実用的な editorial explainer で、文字は詰め込みすぎないでください。"
+        f"Create an infographic-style image featuring a character with these traits: {CHARACTER_DESCRIPTION}. "
+        f"The character is visually explaining this topic in English: {remove_urls(prompt)}. "
+        "Rewrite the ideas into short English headings and labels instead of copying long source text. "
+        "Show 3 to 5 key points with icons, arrows, and compact captions. "
+        "Use a practical red-and-black editorial explainer style and avoid dense text."
     )
     fallback_payload = dict(base_payload)
     fallback_payload["prompt"] = fallback_prompt
