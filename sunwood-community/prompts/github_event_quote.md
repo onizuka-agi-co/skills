@@ -21,7 +21,7 @@
 GitHub event 固有ルール:
 - 参照URLとして使うのは X のポストURLではなく、GitHub の release / repository URL です。
 - GitHub event のリプライには、その URL を読むと何が確認できるのかを短く添えてください。
-- 図解画像を作る場合は、調査レポート Markdown を元に日本語で図解してください。
+- 図解画像を作る場合は、調査レポート Markdown を元に英語で図解してください。
 
 解説の要件:
 - `prompts/shared_explainer_requirements.md` を適用してください。
