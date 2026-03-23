@@ -492,10 +492,9 @@ def post_community_tweet(
     text: str,
     token_context: dict,
     media_ids: Optional[list[str]] = None,
-    quote_tweet_id: Optional[str] = None,
     reply_to_tweet_id: Optional[str] = None,
 ) -> dict:
-    """コミュニティに投稿（オプションで画像添付・引用リツイート・返信）"""
+    """コミュニティに投稿（オプションで画像添付・返信）"""
     if reply_to_tweet_id:
         validate_reply_text(text)
     else:
@@ -506,9 +505,6 @@ def post_community_tweet(
     
     if media_ids:
         payload["media"] = {"media_ids": media_ids}
-    
-    if quote_tweet_id:
-        payload["quote_tweet_id"] = quote_tweet_id
     
     if reply_to_tweet_id:
         payload["reply"] = {"in_reply_to_tweet_id": reply_to_tweet_id}
@@ -523,7 +519,13 @@ def post_community_tweet(
     return resp.json()
 
 
-def save_log(original_tweet: dict, community_post: dict, quote_text: str):
+def save_log(
+    original_tweet: dict,
+    community_post: dict,
+    quote_text: str,
+    reply_post: dict | None = None,
+    reply_text: str = "",
+):
     """投稿ログを保存"""
     now = datetime.now(timezone.utc)
     date_dir = LOGS_DIR / now.strftime("%Y-%m-%d")
@@ -545,6 +547,12 @@ def save_log(original_tweet: dict, community_post: dict, quote_text: str):
             "url": f"https://x.com/i/status/{community_post.get('data', {}).get('id', '')}",
         },
     }
+    if reply_post:
+        log_data["reply_post"] = {
+            "id": reply_post.get("data", {}).get("id", ""),
+            "text": reply_text,
+            "url": f"https://x.com/i/status/{reply_post.get('data', {}).get('id', '')}",
+        }
 
     with open(log_file, "w") as f:
         json.dump(log_data, f, ensure_ascii=False, indent=2)
@@ -553,8 +561,8 @@ def save_log(original_tweet: dict, community_post: dict, quote_text: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="AI解説生成付き引用リツイート")
-    parser.add_argument("tweet_url", help="引用するツイートのURLまたはID")
+    parser = argparse.ArgumentParser(description="AI解説生成付き解説投稿")
+    parser.add_argument("tweet_url", help="対象ツイートのURLまたはID")
     parser.add_argument("--preview", action="store_true", help="プレビューのみ")
     parser.add_argument("--days", type=int, default=7, help="過去ログ参照日数")
     parser.add_argument(
@@ -609,7 +617,7 @@ def main():
         include_quote = not args.no_quote
         summary = generate_smart_summary(tweet_text, author_name, context, args.template, include_quote)
 
-        # 投稿テキスト（URLは本文に含めず、引用リツイート形式で投稿）
+        # 投稿テキスト（URLは本文に含めず、通常投稿 + リプライ形式で投稿）
         quote_text = summary
         validate_main_post_text(quote_text)
 
@@ -619,7 +627,7 @@ def main():
         print("=" * 40)
         print(quote_text)
         if args.preview:
-            print(f"\n📎 引用ツイート: https://x.com/i/status/{tweet_id}")
+            print(f"\n📎 元ツイート: https://x.com/i/status/{tweet_id}")
         print("=" * 40 + "\n")
 
         if args.preview:
@@ -655,67 +663,26 @@ def main():
                     "Visual mode requires an attached image, but image generation or upload failed."
                 ) from e
 
-        # 投稿実行（引用リツイート形式を試行）
-        try:
-            result = post_community_tweet(quote_text, token_context, media_ids, quote_tweet_id=tweet_id)
-            post_id = result.get("data", {}).get("id", "")
-            print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
-        except Exception as e:
-            # community_id + quote_tweet_id の併用がエラーの場合
-            error_str = str(e)
-            if "403" in error_str or "400" in error_str or "Forbidden" in error_str or "Bad Request" in error_str:
-                print("⚠️ 引用リツイート形式が禁止されています")
-                # 通常ツイートとして投稿（コミュニティなし）して返信可能にする
-                try:
-                    # コミュニティなしで投稿
-                    normal_tweet_url = "https://api.x.com/2/tweets"
-                    normal_payload = {"text": quote_text}
-                    if media_ids:
-                        normal_payload["media"] = {"media_ids": media_ids}
-                    resp = request_httpx(
-                        "POST",
-                        normal_tweet_url,
-                        token_context,
-                        headers={"Content-Type": "application/json"},
-                        json=normal_payload,
-                    )
-                    result = resp.json()
-                    
-                    post_id = result.get("data", {}).get("id", "")
-                    print(f"✅ 投稿成功（通常ツイート）: https://x.com/i/status/{post_id}")
-                    
-                    # 返信としてURLを投稿
-                    tweet_url = f"https://x.com/i/status/{tweet_id}"
-                    reply_text = build_source_reply_text(
-                        "📎 元ポスト",
-                        tweet_url,
-                        "元の投稿を確認したい場合はこちらです。論点と文脈を直接たどれます。",
-                    )
-                    reply_payload = {
-                        "text": reply_text,
-                        "reply": {"in_reply_to_tweet_id": post_id}
-                    }
-                    
-                    resp = request_httpx(
-                        "POST",
-                        normal_tweet_url,
-                        token_context,
-                        headers={"Content-Type": "application/json"},
-                        json=reply_payload,
-                    )
-                    reply_result = resp.json()
-                    
-                    reply_id = reply_result.get("data", {}).get("id", "")
-                    print(f"✅ 返信投稿: https://x.com/i/status/{reply_id}")
-                    
-                except Exception as e2:
-                    print(f"❌ 再投稿エラー: {e2}")
-                    raise
-            else:
-                raise
+        result = post_community_tweet(quote_text, token_context, media_ids)
+        post_id = result.get("data", {}).get("id", "")
+        print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
+
+        tweet_url = f"https://x.com/i/status/{tweet_id}"
+        reply_text = build_source_reply_text(
+            "📎 元ポスト",
+            tweet_url,
+            "元の投稿を確認したい場合はこちらです。論点と文脈を直接たどれます。",
+        )
+        reply_result = post_community_tweet(
+            reply_text,
+            token_context,
+            reply_to_tweet_id=post_id,
+        )
+        reply_id = reply_result.get("data", {}).get("id", "")
+        print(f"✅ 返信投稿: https://x.com/i/status/{reply_id}")
 
         # ログ保存
-        save_log(tweet, result, quote_text)
+        save_log(tweet, result, quote_text, reply_result, reply_text)
 
     except Exception as e:
         print(f"❌ エラー: {e}")

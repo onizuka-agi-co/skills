@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-引用リツイート投稿スクリプト - Sunwood AI OSS Hub専用
+解説投稿スクリプト - Sunwood AI OSS Hub専用
 
 Usage:
     uv run quote_to_community.py <ポストURL> "解説文"
@@ -202,8 +202,8 @@ def build_quote_text(summary: str, template: str = "notable") -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="引用リツイート投稿")
-    parser.add_argument("tweet_url", help="引用するツイートのURLまたはID")
+    parser = argparse.ArgumentParser(description="解説投稿")
+    parser.add_argument("tweet_url", help="対象ツイートのURLまたはID")
     parser.add_argument("summary", help="解説文")
     parser.add_argument("--ai", action="store_true", help="AIによる解説生成")
     parser.add_argument(
