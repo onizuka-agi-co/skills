@@ -9,36 +9,22 @@ Usage:
 
 import argparse
 import json
-import os
 import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
-import httpx
+from sunwood_token_auth import load_token_context, request_httpx
 
 # 設定
 COMMUNITY_ID = "2010195061309587967"  # Sunwood AI OSS Hub
-WORKSPACE_ROOT = Path(__file__).parent.parent.parent.parent
-DATA_X_DIR = WORKSPACE_ROOT / "data" / "x"
-TOKEN_FILE = Path(os.environ.get("SUNWOOD_COMMUNITY_TOKEN_FILE", str(DATA_X_DIR / "x-tokens.json")))
 LOGS_DIR = Path(__file__).parent.parent / "logs"
 ONIAGI_TAG = "$ONIAGI"
 LEGACY_TAGS = ("#ONIZUKA_AGI",)
 URL_LINE_RE = re.compile(r"^https?://\S+$")
 URL_RE = re.compile(r"https?://\S+")
 ESCAPED_CONTROL_SEQUENCE_RE = re.compile(r"\\[nrt]")
-
-
-def load_token() -> str:
-    """アクセストークンを読み込む"""
-    if not TOKEN_FILE.exists():
-        raise FileNotFoundError(f"Token file not found: {TOKEN_FILE}")
-
-    with open(TOKEN_FILE) as f:
-        data = json.load(f)
-    return data.get("access_token", "")
 
 
 def extract_tweet_id(url_or_id: str) -> str:
@@ -57,16 +43,12 @@ def extract_tweet_id(url_or_id: str) -> str:
     raise ValueError(f"Invalid tweet URL or ID: {url_or_id}")
 
 
-def get_tweet(tweet_id: str, token: str) -> dict:
+def get_tweet(tweet_id: str, token_context: dict) -> dict:
     """ツイート情報を取得"""
     url = f"https://api.x.com/2/tweets/{tweet_id}"
-    headers = {"Authorization": f"Bearer {token}"}
     params = {"tweet.fields": "created_at,author_id,text"}
-
-    with httpx.Client() as client:
-        resp = client.get(url, headers=headers, params=params)
-        resp.raise_for_status()
-        return resp.json()
+    resp = request_httpx("GET", url, token_context, params=params)
+    return resp.json()
 
 
 def extract_urls(text: str) -> list[str]:
@@ -113,7 +95,13 @@ def build_source_reply_text(label: str, url: str, note: str) -> str:
     return reply_text
 
 
-def post_community_tweet(text: str, token: str, *, reply_to_tweet_id: str | None = None, include_community: bool = True) -> dict:
+def post_community_tweet(
+    text: str,
+    token_context: dict,
+    *,
+    reply_to_tweet_id: str | None = None,
+    include_community: bool = True,
+) -> dict:
     """コミュニティに投稿、またはその投稿に返信"""
     if reply_to_tweet_id:
         validate_reply_text(text)
@@ -121,20 +109,19 @@ def post_community_tweet(text: str, token: str, *, reply_to_tweet_id: str | None
         validate_main_post_text(text)
 
     url = "https://api.x.com/2/tweets"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-    }
     payload = {"text": text}
     if include_community:
         payload["community_id"] = COMMUNITY_ID
     if reply_to_tweet_id:
         payload["reply"] = {"in_reply_to_tweet_id": reply_to_tweet_id}
-
-    with httpx.Client() as client:
-        resp = client.post(url, headers=headers, json=payload)
-        resp.raise_for_status()
-        return resp.json()
+    resp = request_httpx(
+        "POST",
+        url,
+        token_context,
+        headers={"Content-Type": "application/json"},
+        json=payload,
+    )
+    return resp.json()
 
 
 def save_log(original_tweet: dict, community_post: dict, quote_text: str, reply_post: dict | None = None, reply_text: str = ""):
@@ -231,8 +218,8 @@ def main():
 
     try:
         # トークン読み込み
-        token = load_token()
-        if not token:
+        token_context = load_token_context()
+        if not token_context.get("token_data", {}).get("access_token"):
             print("❌ アクセストークンが見つかりません")
             sys.exit(1)
 
@@ -241,7 +228,7 @@ def main():
         print(f"📌 ツイートID: {tweet_id}")
 
         # ツイート取得
-        tweet_data = get_tweet(tweet_id, token)
+        tweet_data = get_tweet(tweet_id, token_context)
         tweet = tweet_data.get("data", {})
         tweet_text = tweet.get("text", "")
         print(f"📝 元ツイート: {tweet_text[:100]}...")
@@ -278,13 +265,13 @@ def main():
             return
 
         # 投稿実行
-        result = post_community_tweet(quote_text, token)
+        result = post_community_tweet(quote_text, token_context)
         post_id = result.get("data", {}).get("id", "")
         print(f"✅ 投稿成功: https://x.com/i/status/{post_id}")
 
         reply_result = post_community_tweet(
             reply_text,
-            token,
+            token_context,
             reply_to_tweet_id=post_id,
         )
         reply_id = reply_result.get("data", {}).get("id", "")
