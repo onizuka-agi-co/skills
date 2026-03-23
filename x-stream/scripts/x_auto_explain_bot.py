@@ -139,31 +139,25 @@ def generate_explanation(tweet_text: str, tweet_id: str) -> str:
     """
     tweet_url = f"https://x.com/i/status/{tweet_id}"
     
-    # Call quote_explain.py --ai
-    cmd = ["python3", str(QUOTE_EXPLAIN_SCRIPT), tweet_url, "--ai"]
+    # Call quote_explain.py --ai --json
+    cmd = ["python3", str(QUOTE_EXPLAIN_SCRIPT), tweet_url, "--ai", "--json"]
     
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
         
         if result.returncode == 0:
-            # Parse the output
             output = result.stdout.strip()
-            try:
-                data = json.loads(output)
-                if data.get("success"):
-                    return data
-            except:
-                pass
-        
-        # Fallback: simple explanation
-        return generate_simple_explanation(tweet_text, tweet_id)
+            data = json.loads(output)
+            if data.get("success"):
+                return data
+            return data
         
     except subprocess.TimeoutExpired:
         print("Explanation generation timed out")
-        return generate_simple_explanation(tweet_text, tweet_id)
+        return {"success": False, "error": "timeout"}
     except Exception as e:
         print(f"Error generating explanation: {e}")
-        return generate_simple_explanation(tweet_text, tweet_id)
+        return {"success": False, "error": str(e)}
 
 
 def generate_simple_explanation(tweet_text: str, tweet_id: str) -> dict:
