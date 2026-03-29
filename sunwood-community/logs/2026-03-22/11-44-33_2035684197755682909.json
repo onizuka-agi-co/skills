@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-03-22T11:44:33.320447+00:00",
+  "payload_file": "/config/.openclaw/workspace/github-release-payload.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/generated_1.png",
+  "main_post": {
+    "id": "2035684197755682909",
+    "text": "🔍 GitHub Monitoring Test Release: v0.1.5\n\nSunwood-ai-labs published a new release of their test repository for github-account-scanner validation.\n\n🎯 What This Release Tests:\n• Detection of newly created repositories\n• Detection of newly published releases\n• Discord notification pipeline end-to-end\n\n📋 Key Change in v0.1.5:\nDocumentation clarification emphasizing this is an experiment-only repository, not for production use.\n\n💡 Why This Matters:\nAutomated monitoring tools need safe, predictable targets for testing. This repository provides exactly that - a controllable environment to validate the scanner works correctly before monitoring real projects.\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2035684197755682909"
+  },
+  "replies": [
+    {
+      "id": "2035684200985383103",
+      "reply_id": "release",
+      "reply_to": "main",
+      "text": "📎 Release Details\nDirect link to the v0.1.5 release notes and assets.\nhttps://github.com/Sunwood-ai-labs/github-account-scanner-detection-sample-20260321-195933/releases/tag/v0.1.5",
+      "url": "https://x.com/i/status/2035684200985383103"
+    },
+    {
+      "id": "2035684202377851050",
+      "reply_id": "repo",
+      "reply_to": "main",
+      "text": "🔗 Repository\nExplore the test repository structure and documentation.\nhttps://github.com/Sunwood-ai-labs/github-account-scanner-detection-sample-20260321-195933",
+      "url": "https://x.com/i/status/2035684202377851050"
+    },
+    {
+      "id": "2035684203866792073",
+      "reply_id": "account",
+      "reply_to": "main",
+      "text": "👤 Sunwood-ai-labs Account\nView all repositories from this organization.\nhttps://github.com/Sunwood-ai-labs",
+      "url": "https://x.com/i/status/2035684203866792073"
+    }
+  ]
+}

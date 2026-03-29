@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-03-22T08:07:29.194067+00:00",
+  "payload_file": "/config/.openclaw/workspace/payload-github-scanner-test.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/Onizuka_2k_delpmaspu.png",
+  "main_post": {
+    "id": "2035629570444165226",
+    "text": "🔍 github-account-scannerの動作確認リリース\n\nSunwood-ai-labsが公開した v0.1.3 は、GitHubアカウント監視ツール「github-account-scanner」が正しく新規リリースを検知できるかを確認するためのテスト用リリースです。\n\n🎯 このツールの役割:\n• 特定のGitHubアカウントを監視\n• 新規リポジトリ作成を検知\n• 新規リリース公開を検知\n• draft releaseは公開時点で初めて通知\n\n💡 技術的ポイント:\n• Python + uv で実装\n• GitHub REST APIを定期実行して差分検出\n• 1リポジトリにつき直近100件のreleaseを取得\n• 毎時スキャン前提でAPI呼び出し効率化\n\n📊 スケール感:\nSunwood-ai-labsは2026-03-21時点で707件のpublic repoを保有。\nunauthenticated API（60 req/hour）では足りないため、GITHUB_TOKEN（1000 req/hour/repo）の設定が推奨されています。\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2035629570444165226"
+  },
+  "replies": [
+    {
+      "id": "2035629573996716091",
+      "reply_id": "release",
+      "reply_to": "main",
+      "text": "📎 今回のテストリリース\nhttps://github.com/Sunwood-ai-labs/github-account-scanner-detection-sample-20260321-195933/releases/tag/v0.1.3",
+      "url": "https://x.com/i/status/2035629573996716091"
+    },
+    {
+      "id": "2035629575418577294",
+      "reply_id": "scanner",
+      "reply_to": "main",
+      "text": "🔗 監視ツール本体\ngithub-account-scannerの詳細はこちら。\nhttps://github.com/Sunwood-ai-labs/github-account-scanner",
+      "url": "https://x.com/i/status/2035629575418577294"
+    }
+  ]
+}

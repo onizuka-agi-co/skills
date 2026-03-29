@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-03-22T02:44:53+09:00",
+  "original_tweet": {
+    "id": "2035194756691636709",
+    "text": "Graph and node editor for the browser using VueJS",
+    "url": "https://x.com/i/status/2035194756691636709",
+    "author": "Tom Döerr (@tom_doerr)"
+  },
+  "community_post": {
+    "id": "2035413228248068350",
+    "text": "🔍 Vue.js製グラフエディタ「BaklavaJS」\n\nブラウザ上で動作するノードベースのビジュアルエディタライブラリ。\n\n🎯 主な特徴:\n・TypeScript で完全型安全\n・Vue.js コンポーネントとして組み込み\n・プラグインで自由に拡張\n・カスタムノードを簡単定義\n\n💡 用途例:\n・AI エージェントのワークフロー設計\n・シェーダーエディタ\n・データパイプラインビルダー\n・ローコードプラットフォーム\n\nWeb技術だけで本格的なエディタを構築できる。$ONIAGI",
+    "url": "https://x.com/i/status/2035413228248068350"
+  },
+  "replies": [
+    {
+      "id": "2035413281532449151",
+      "type": "original_tweet",
+      "text": "📎 元ポスト\n\n@tom_doerr によるBaklavaJS紹介ポスト。Vue.js製グラフエディタの実用性と拡張性が話題。",
+      "url": "https://x.com/i/status/2035413281532449151"
+    },
+    {
+      "id": "2035413309768536068",
+      "type": "github_link",
+      "text": "🔗 GitHubリポジトリ\n\n公式ドキュメントとオンラインデモも用意。TypeScript全書で型安全性を保証。",
+      "url": "https://x.com/i/status/2035413309768536068"
+    },
+    {
+      "id": "2035413354140029156",
+      "type": "diagram",
+      "text": "🎨 図解: BaklavaJSのアーキテクチャ",
+      "url": "https://x.com/i/status/2035413354140029156"
+    }
+  ],
+  "report_path": "project/x-bookmarks-watcher/logs/reports/2026/03/21/174341-2035194756691636709.md",
+  "diagram_url": "https://v3b.fal.media/files/b/0a9315bb/vGzxT46nDNNb45BTgFk6p_g380sF9y.png"
+}

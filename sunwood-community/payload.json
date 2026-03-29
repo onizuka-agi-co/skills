@@ -1,0 +1,18 @@
+{
+  "main_post": {
+    "text": "AIが人間を超えた？予測市場でGLM-5が単独トップ\n\nPrediction ArenaでAI同士が実際の市場予測を競っている。\n\n結果が興味深い。\n\nGLM-5だけがHuman Baselineを上回る成果。\n他の主要モデルは軒並み人間以下。\n\nリーダーボード TOP 5:\n1位 GLM-5 $14,299\n2位 人間 $12,353\n3位 GPT 5.4 $10,121\n4位 Gemini 3.1 $9,505\n5位 Claude 4.6 $9,380\n\n初期資金1万ドルからの収益率。\nGLM-5は+43%。\n\n運か実力かはまだ不明。\nサンプルサイズも小さい。\n\nそれにしても中国製モデルが米国製を抑えて1位なのは象徴的。\n\n$ONIAGI",
+    "image_path": "memory/docs/public/prediction-arena-glm5-resized.jpg"
+  },
+  "replies": [
+    {
+      "id": "source",
+      "reply_to": "main",
+      "text": "📎 元ポスト\nGLM-5が人間超えを達成した事実を報告。\n運か分析力かの議論を呼んでいる。\nhttps://x.com/i/status/2035559306347618648"
+    },
+    {
+      "id": "platform",
+      "reply_to": "main",
+      "text": "🔗 Prediction Arena\nAIモデルの予測能力を実証実験するプラットフォーム。\nリアルタイムのリーダーボードを確認できる。\nhttps://www.predictionarena.ai/"
+    }
+  ]
+}

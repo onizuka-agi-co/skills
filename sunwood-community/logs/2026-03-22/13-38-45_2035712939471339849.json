@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-03-22T13:38:45.789937+00:00",
+  "payload_file": "/config/.openclaw/workspace/memory/docs/public/github-scanner-payload.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/github-scanner-v0.1.0-explainer.png",
+  "main_post": {
+    "id": "2035712939471339849",
+    "text": "🔍 New Tool Alert: GitHub Account Scanner v0.1.0\n\nSunwood-ai-labs just released a local-first Python CLI for monitoring GitHub accounts.\n\nKey Features:\n✅ Track public repositories & releases\n✅ Detect new repos and published releases\n✅ Discord alerts with per-event threads\n✅ Designed for large accounts (700+ repos)\n\nPerfect for teams monitoring multiple projects without complex CI/CD infrastructure.\n\nBuilt with Python 3.11+ and uv, MIT licensed.\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2035712939471339849"
+  },
+  "replies": [
+    {
+      "id": "2035712942575063532",
+      "reply_id": "repo",
+      "reply_to": "main",
+      "text": "📂 Source code and documentation\nClone or fork to start monitoring your GitHub accounts.\nhttps://github.com/Sunwood-ai-labs/github-account-scanner",
+      "url": "https://x.com/i/status/2035712942575063532"
+    },
+    {
+      "id": "2035712944131223855",
+      "reply_id": "release",
+      "reply_to": "main",
+      "text": "🏷️ Release v0.1.0 notes\nFull changelog with highlights and validation steps.\nhttps://github.com/Sunwood-ai-labs/github-account-scanner/releases/tag/v0.1.0",
+      "url": "https://x.com/i/status/2035712944131223855"
+    },
+    {
+      "id": "2035712945666322903",
+      "reply_id": "account",
+      "reply_to": "main",
+      "text": "🏢 More projects from Sunwood-ai-labs\nExplore 700+ open source repositories.\nhttps://github.com/Sunwood-ai-labs",
+      "url": "https://x.com/i/status/2035712945666322903"
+    }
+  ]
+}

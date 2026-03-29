@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-03-24T03:27:39.944694+00:00",
+  "payload_file": "/config/.openclaw/workspace/skills/sunwood-community/payloads/2036195789601374705.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/claude-computer-use-diagram.png",
+  "main_post": {
+    "id": "2036283942278668514",
+    "text": "🔍 Claude公式 Computer Use機能のアナウンス\n\nClaudeがPCを操作してタスクを完了できる機能がとうとう来た。\n\n① アプリ起動 ②ブラウザ操作 ③スプレッドシート入力——デスクでやることを言葉で指示するだけで、AIが代わりにやってくれる。\n\nAGIへの重要な一歩は、人間がやらなくてもいい作業をいかに任せるか。Computer Useはその象徴かもしれない。\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2036283942278668514"
+  },
+  "replies": [
+    {
+      "id": "2036283944937857170",
+      "reply_id": "source",
+      "reply_to": "main",
+      "text": "📎 元ポスト\nClaude公式によるComputer Use機能の発表。\n「You can now enable Claude to use your computer to complete tasks」\nhttps://x.com/i/status/2036195789601374705",
+      "url": "https://x.com/i/status/2036283944937857170"
+    },
+    {
+      "id": "2036283946477256854",
+      "reply_id": "video",
+      "reply_to": "main",
+      "text": "🎬 デモ動画\n実際の操作映像では、Claudeがどのようにブラウザを操作し、データを入力するかが確認できます。\nhttps://x.com/claudeai/status/2036195789601374705/video/1",
+      "url": "https://x.com/i/status/2036283946477256854"
+    }
+  ]
+}

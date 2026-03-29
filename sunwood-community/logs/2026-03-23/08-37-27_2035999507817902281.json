@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-03-23T08:37:27.640092+00:00",
+  "payload_file": "/config/.openclaw/workspace/payload-github-release-v0.1.10.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/generated_1.jpeg",
+  "main_post": {
+    "id": "2035999507817902281",
+    "text": "🔍 GitHub Release Update: v0.1.10\n\nSunwood-ai-labs published a new release for their github-account-scanner detection test repository.\n\n🎯 Key Points:\n• Production-profile live verification\n• Worker switched from test to production mode\n• End-to-end detection test completed\n• Discord notification flow validated\n\nThis is a dedicated test repository to ensure the github-account-scanner system reliably detects new releases and sends notifications correctly.\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2035999507817902281"
+  },
+  "replies": [
+    {
+      "id": "2035999510510657785",
+      "reply_id": "release",
+      "reply_to": "main",
+      "text": "📎 Release Notes\nCheck the official release notes for production-profile verification details.\nhttps://github.com/Sunwood-ai-labs/github-account-scanner-detection-sample-20260321-195933/releases/tag/v0.1.10",
+      "url": "https://x.com/i/status/2035999510510657785"
+    },
+    {
+      "id": "2035999511903162405",
+      "reply_id": "repo",
+      "reply_to": "main",
+      "text": "🔗 Repository\nThis test repository validates the scanner's detection capabilities.\nhttps://github.com/Sunwood-ai-labs/github-account-scanner-detection-sample-20260321-195933",
+      "url": "https://x.com/i/status/2035999511903162405"
+    },
+    {
+      "id": "2035999513811546239",
+      "reply_id": "account",
+      "reply_to": "main",
+      "text": "👤 GitHub Account\nExplore more projects from Sunwood-ai-labs.\nhttps://github.com/Sunwood-ai-labs",
+      "url": "https://x.com/i/status/2035999513811546239"
+    }
+  ]
+}

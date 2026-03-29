@@ -227,7 +227,7 @@ def stream_tweets(token: str):
     """ストリームを開始"""
     config = load_config()
     tweet_fields = ",".join(config.get("tweet_fields", DEFAULT_TWEET_FIELDS))
-    stream_url = f"{STREAM_URL}?tweet_fields={tweet_fields}"
+    stream_url = f"{STREAM_URL}?tweet.fields={tweet_fields}"
 
     print(f"🔊 Starting filtered stream...")
     print(f"📡 Connecting to: {stream_url}")

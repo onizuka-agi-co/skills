@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-03-23T04:50:23.786643+00:00",
+  "payload_file": "/config/.openclaw/workspace/project/x-bookmarks-watcher/logs/reports/2026/03/23/044632-payload.json",
+  "metadata": {
+    "source_url": "https://x.com/i/web/status/2035916278649737571",
+    "author": "t.toda (@Trtd6Trtd)",
+    "linked_url": "https://huggingface.co/blog/qvac/fabric-llm-finetune-bitnet",
+    "report_path": "project/x-bookmarks-watcher/logs/reports/2026/03/23/044632-2035916278649737571.md"
+  },
+  "image_source": "/config/.openclaw/workspace/project/x-bookmarks-watcher/logs/reports/2026/03/23/generated_1.png",
+  "main_post": {
+    "id": "2035942365538738578",
+    "text": "【エッジデバイスでLLMをファインチューニングする時代へ】\n\nTetherがBitNet b1.58（1.58ビット量子化LLM）を異種GPU上でLoRAファインチューニングできる世界初のフレームワーク「QVAC Fabric」を発表。\n\n要点:\n• Samsung S25で1Bモデルを約78分でファインチューニング可能\n• iPhone 16では約105分、最大13Bモデルまで動作確認\n• BitNet-13Bは4-bit量子化Qwen3-4Bより29%少ないメモリで動作（2,789 MB）\n• エッジGPUでの推論はCPU比2.1〜11.3倍高速\n\n対応プラットフォーム: Adreno (Qualcomm), Mali (ARM), Apple Bionic GPU, AMD, Intel, NVIDIA\n\nこれまでハイエンドGPUが必要だったLLMの継続学習が、スマホ1台で可能になる転換点。メモリ転送コストを劇的に削減する1.58ビット量子化の威力です。\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2035942365538738578"
+  },
+  "replies": [
+    {
+      "id": "2035942368655122614",
+      "reply_id": "source",
+      "reply_to": "main",
+      "text": "📎 元ポスト\n\n著者は「今年は継続学習の年なのかもしれない」とコメント。エッジデバイスでのファインチューニングが実用レベルに到達したことを示唆しています。\n\nhttps://x.com/i/web/status/2035916278649737571",
+      "url": "https://x.com/i/status/2035942368655122614"
+    },
+    {
+      "id": "2035942370060255546",
+      "reply_id": "docs",
+      "reply_to": "main",
+      "text": "🔗 技術詳細 (HuggingFace Blog)\n\nQVAC Fabricの実装詳細、ベンチマーク結果、Vulkan/Metal バックエンドの技術解説が記載されています。llama.cppベースでオープンソース。\n\nhttps://huggingface.co/blog/qvac/fabric-llm-finetune-bitnet",
+      "url": "https://x.com/i/status/2035942370060255546"
+    }
+  ]
+}

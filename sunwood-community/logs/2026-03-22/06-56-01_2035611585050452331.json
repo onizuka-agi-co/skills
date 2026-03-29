@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-03-22T06:56:01.044654+00:00",
+  "payload_file": "/config/.openclaw/workspace/skills/sunwood-community/payload-minimax-m27.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/minimax-m27-explainer.png",
+  "main_post": {
+    "id": "2035611585050452331",
+    "text": "🔍 MiniMax M2.7 がマルチエージェントで3D太陽系を構築\n\nChetaslua氏がMiniMax M2.7のマルチエージェントシステムを使い、Three.jsで美しい3D太陽系を作成。\n\n【要点】\n🤖 MiniMax M2.7 - 中国MiniMax社の最新LLM\n- 自己進化能力を持つモデル\n- M2.5比で実戦能力が大幅向上\n\n🔄 マルチエージェント協調\n- 複数のAIエージェントが連携\n- 1時間かけて反復的に開発\n- ワンショット生成ではない\n\n🎮 Three.jsで3D描画\n- WebGLベースの3Dライブラリ\n- ブラウザ上でリアルタイム描画\n- 太陽系のような複雑なシーンも構築可能\n\n💡 中国AGI開発が加速中。DeerFlow 2.0に続き、MiniMaxもエージェント機能を強化。\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2035611585050452331"
+  },
+  "replies": [
+    {
+      "id": "2035611587747451021",
+      "reply_id": "source",
+      "reply_to": "main",
+      "text": "📎 元ポスト\nMiniMax M2.7のマルチエージェントがThree.jsで3D太陽系を作成するデモ動画。1時間の反復開発プロセスが見どころ。\nhttps://x.com/i/web/status/2035410441149755415",
+      "url": "https://x.com/i/status/2035611587747451021"
+    },
+    {
+      "id": "2035611589219652036",
+      "reply_id": "video",
+      "reply_to": "main",
+      "text": "🎬 デモ動画\n実際に生成された3D太陽系のアニメーションを確認できます。美しい軌道運動と照明効果に注目。\nhttps://x.com/chetaslua/status/2035410441149755415/video/1",
+      "url": "https://x.com/i/status/2035611589219652036"
+    }
+  ]
+}

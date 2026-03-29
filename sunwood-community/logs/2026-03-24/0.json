@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-03-24T08:12:00+09:00',
+  "original_tweet": {
+    "id": "2036043907776098345",
+    "url": "https://x.com/i/web/status/2036043907776098345",
+    "author": "Victor M (@victormustar)",
+    "text": "NVIDIA's Kimodo is the release of the week 🔥 Prompt the timeline whatever your want like: \"a person walks forward\" → \"a person starts jumping\", hit Generate, and watch a 3D character..."
+  },
+  "community_post": {
+    "id": "2036043907776098345",
+    "url": "https://x.com/Onizuka_Renji/status/2036043907776098345",
+    "text": "🔍 NVIDIA Kimodo: テキストで3Dアニメーション\n\nNVIDIAが新しい**Kimodo**がリリースーステキストプロンプトで3Dキャラクターのアニメーションを制御できる新ツール。\n\n## 使使い方\n\nタイムラインに自由にプロンプトを追加:\例: 「a person walks forward」 → 「a person starts jumping」\Generate ボタンをで3Dキャラクターがアニメーション生成\n\nゲーム開発|VTuber制作、バーチャルプロダクションなどで幅広く活用できる\n\n## ロ特徴\n\n- **タイムライン制御**: テキストプロンプトで時系列を編集
+- **リアルタイム生成**: Generateボタンで即座に3Dアニメーション
+- **直感的な操作**: キーフレーム操作やモーションキャプチャ不要\n\n---\n\n$ONizuka_AGI #ONIAGI"

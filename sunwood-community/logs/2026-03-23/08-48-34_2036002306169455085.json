@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-03-23T08:48:34.185804+00:00",
+  "payload_file": "/config/.openclaw/workspace/memory/docs/public/payload-android-termux.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/android-termux-ssh-bootstrap-v1.0.0-diagram.png",
+  "main_post": {
+    "id": "2036002306169455085",
+    "text": "🔍 New Release: Android Termux SSH Bootstrap v1.0.0\n\nA new Codex skill for bootstrapping Termux-over-SSH from Windows PC via ADB and USB.\n\n🎯 What it does:\n• Prepare ADB on Windows\n• Install GitHub Termux build\n• Handle Xiaomi/HyperOS restrictions\n• Configure SSH with public key auth\n• Connect via adb forward\n\n💡 Key Features:\n• No root required\n• Automated validation workflow\n• Bilingual docs (EN/JP)\n• MIT licensed\n\nPerfect for developers who want remote Termux access from Windows.\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2036002306169455085"
+  },
+  "replies": [
+    {
+      "id": "2036002309138989060",
+      "reply_id": "release",
+      "reply_to": "main",
+      "text": "📎 Release Notes\nFirst public release with full feature set and validation.\nhttps://github.com/Sunwood-ai-labs/android-termux-ssh-bootstrap-skill/releases/tag/v1.0.0",
+      "url": "https://x.com/i/status/2036002309138989060"
+    },
+    {
+      "id": "2036002310502191275",
+      "reply_id": "repo",
+      "reply_to": "main",
+      "text": "🔗 Repository\nClone and set up the Codex skill.\nhttps://github.com/Sunwood-ai-labs/android-termux-ssh-bootstrap-skill",
+      "url": "https://x.com/i/status/2036002310502191275"
+    }
+  ]
+}

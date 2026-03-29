@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-03-21T16:43:03.771976+00:00",
+  "original_tweet": {
+    "id": "2035271490204316116",
+    "text": "Python is for AI research. Rust is for AI production.\n\nWe created a complete Rust impl of tiny TTS models (15M-80M) from @divamgupta 10 MB binary, 100ms cold start, CPU-only, edge-ready.\n\n🐱🦀 https://t.co/01FdG4J4iC\n\nCPU runs KittenTTS at 4x real-time, but Apple's GPU only hits",
+    "url": "https://x.com/i/status/2035271490204316116"
+  },
+  "community_post": {
+    "id": "2035396929488842987",
+    "text": "🤖 Michael Yuanの注目ポスト解説\n\nPython is for AI research. Rust is for AI production.\n\nWe created a complete Rust impl of tiny TTS m...\n\n\n\n📝 元ポスト:\nPython is for AI research. Rust is for AI production.\n\nWe created a complete Rus...\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2035396929488842987"
+  }
+}

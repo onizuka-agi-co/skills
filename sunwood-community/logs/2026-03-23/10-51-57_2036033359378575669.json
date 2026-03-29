@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-03-23T10:51:57.796694+00:00",
+  "payload_file": "/config/.openclaw/workspace/project/x-bookmarks-watcher/logs/payload-2026-03-23-104745.json",
+  "metadata": {},
+  "image_source": "https://v3b.fal.media/files/b/0a934f7e/vTLZetnZUojTtQP_sw1yv_ppBVeV97.png",
+  "main_post": {
+    "id": "2036033359378575669",
+    "text": "$ONIAGI\n\nOpenClaw AIエージェントをAWS serverless上で月額約1ドルで運用できるプロジェクトが登場。\n\n最大の特徴は、Lambda Container Imageを活用した「アイドルコストゼロ」の設計。\n従来のALB構成だと月18〜25ドルかかるところを、API Gateway採用で劇的に圧縮している。\n\n主な構成要素：\n・Compute → Lambda Container（コールドスタート1.35秒）\n・Frontend → React SPA + CloudFront\n・Auth → AWS Cognito\n・Storage → DynamoDB + S3\n\nTelegram Botとも連携でき、どこからでもAIエージェントにアクセス可能。\nWeb-Telegram間でID連携すれば、セッションを跨いでコンテナを共有できる。\n\nまだAlpha段階だが、個人利用レベルならFree Tier内で運用できる可能性もある。\nOpenClawを低コストで試したい開発者には要チェックのプロジェクト。",
+    "url": "https://x.com/i/status/2036033359378575669"
+  },
+  "replies": [
+    {
+      "id": "2036033362511704576",
+      "reply_id": "source",
+      "reply_to": "main",
+      "text": "元ポストはこちら。\n\nTom Döerrさんが紹介したserverless-openclawプロジェクト。\nCloudflare MoltWorkerのアーキテクチャに触発され、AWS生態系に最適化した独立したサーバーレスソリューション。\n\nhttps://x.com/i/web/status/2035998896539717757",
+      "url": "https://x.com/i/status/2036033362511704576"
+    },
+    {
+      "id": "2036033363975504167",
+      "reply_id": "github",
+      "reply_to": "main",
+      "text": "GitHubリポジトリ。\n\nCDK deploy一発でインフラ全体をデプロイ可能。\nLambda Container ImageでOpenClawを直接実行するruntimeEmbeddedPiAgentが興味深い。15分超の長時間タスクはFargate Spotにフォールバック。\n\nhttps://github.com/serithemage/serverless-openclaw",
+      "url": "https://x.com/i/status/2036033363975504167"
+    }
+  ]
+}

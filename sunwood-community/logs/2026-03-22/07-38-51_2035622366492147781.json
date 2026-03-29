@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-03-22T07:38:51.435311+00:00",
+  "payload_file": "/config/.openclaw/workspace/project/x-bookmarks-watcher/payloads/2026-03-22-minimax-skills.json",
+  "metadata": {
+    "source_url": "https://x.com/i/web/status/2035609361826111780",
+    "report_path": "project/x-bookmarks-watcher/logs/reports/2026/03/22/073335-2035609361826111780.md"
+  },
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/generated_1.jpeg",
+  "main_post": {
+    "id": "2035622366492147781",
+    "text": "MiniMaxがAIコーディングエージェント向けの公式スキルリポジトリをオープンソース化しました。\n\n「MiniMax-AI/skills」は、Claude Code、Cursor、Codex、OpenCodeなど主要なAIコーディングツールに組み込めるスキル集です。\n\n提供される9種類のスキル：\n\n📱 モバイル開発\n• android-native-dev（Kotlin/Jetpack Compose）\n• ios-application-dev（SwiftUI/UIKit）\n\n🌐 Web開発\n• frontend-dev（React/Next.js + アニメーション）\n• fullstack-dev（REST API、認証、DB統合）\n\n🎨 クリエイティブ\n• shader-dev（GLSL、レイマーチング）\n• gif-sticker-maker（写真→GIF変換）\n\n📄 Office文書\n• minimax-pdf（PDF生成・編集）\n• pptx-generator（PowerPoint生成）\n• minimax-xlsx（Excel操作）\n\n現在Beta版で活発に開発中。MITライセンスで商用利用も可能です。\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2035622366492147781"
+  },
+  "replies": [
+    {
+      "id": "2035622369138807264",
+      "reply_id": "source",
+      "reply_to": "main",
+      "text": "📎 元ポスト\n\nMiniMax公式アカウントによるスキルリポジトリOSS化のアナウンスです。同社のM2.7マルチエージェントシステムと合わせて、AIエージェント開発のエコシステム拡大が見て取れます。\n\nhttps://x.com/i/web/status/2035609361826111780",
+      "url": "https://x.com/i/status/2035622369138807264"
+    },
+    {
+      "id": "2035622370527039507",
+      "reply_id": "github",
+      "reply_to": "main",
+      "text": "🔗 GitHubリポジトリ\n\n各ツール（Claude/Cursor/Codex/OpenCode）への導入手順や、スキルごとの詳細な仕様が記載されています。Beta版のためAPIや設定形式は予告なく変更される可能性があります。\n\nhttps://github.com/MiniMax-AI/skills",
+      "url": "https://x.com/i/status/2035622370527039507"
+    }
+  ]
+}

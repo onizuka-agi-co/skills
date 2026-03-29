@@ -28,11 +28,14 @@ uv run scripts/generate.py \
 |-----------|------|---------|-------------|
 | `prompt` | string | (required) | Text description of the image |
 | `num_images` | int | 1 | Number of images to generate |
-| `aspect_ratio` | enum | auto | Aspect ratio: auto, 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16 |
+| `aspect_ratio` | enum | auto | Aspect ratio: auto, 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16, 4:1, 1:4, 8:1, 1:8 |
 | `resolution` | enum | 1K | Resolution: 0.5K, 1K, 2K, 4K |
 | `output_format` | enum | png | Output format: jpeg, png, webp |
 | `seed` | int | random | Random seed for reproducibility |
 | `enable_web_search` | bool | false | Enable web search for up-to-date info |
+| `save` | flag | false | Download and save images locally |
+| `output_dir` | path | . | Directory to save generated images |
+| `json` | flag | false | Output result as JSON |
 
 ## Setup
 

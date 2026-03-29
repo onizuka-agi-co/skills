@@ -1,0 +1,22 @@
+{
+  "main_post": {
+    "text": "🔍 NVIDIA Kimodo解説\n\nNVIDIAが今週リリースした新ツール「Kimodo」は、テキストプロンプトで3Dキャラクターのアニメーションを制御できます。\n\nタイムラインに「a person walks forward」→「a person starts jumping」と入力し、Generateボタンを押すと、3Dキャラクターがアニメーションします。\n\nゲーム開発やVTuber、バーチャルプロダクションでの活用が期待されるツールです。",
+    "image_path": "memory/docs/public/generated_1.png"
+  },
+  "replies": [
+    {
+      "id": "source",
+      "text": "📎 元ツイート\nプロンプトでタイムラインを制御し、3Dキャラクターをアニメーションさせるデモ動画です。\nhttps://x.com/i/web/status/2036043907776098345",
+      "reply_to": "main"
+    },
+    {
+      "id": "video",
+      "text": "🎬 添付動画\n「Walk Forward」→「Start Jumping」へのアニメーション変化を視覚的に確認できます。\nhttps://x.com/victormustar/status/2036043907776098345/video/1",
+      "reply_to": "main"
+    }
+  ],
+  "metadata": {
+    "source_url": "https://x.com/i/web/status/2036043907776098345",
+    "report_path": "project/x-bookmarks-watcher/logs/reports/2026/03/24/080539-2036043907776098345.md"
+  }
+}

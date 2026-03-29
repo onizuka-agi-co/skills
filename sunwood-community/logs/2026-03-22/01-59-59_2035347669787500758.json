@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-03-22T01:59:59+09:00",
+  "original_tweet": {
+    "id": "2035347669787500758",
+    "text": "New Model:\nhuihui-ai/Huihui-Qwen3.5-9B-Claude-4.6-Opus-abliterated\n\nThis is an uncensored version of Jackrong/Qwen3.5-9B-Claude-4.6-Opus-Reasoning-Distilled-v2 created with abliteration\n\nhttps://t.co/4Zh6NZLaBp",
+    "url": "https://x.com/i/web/status/2035347669787500758",
+    "author": "huihui.ai (@support_huihui)"
+  },
+  "community_post": {
+    "id": "2035401634441011410",
+    "text": "🔮 技術解説\n\nQwen3.5-9BにClaude 4.6 Opusの推論力を蒸留し、さらにabliterationで検閲を解除した興味深いモデルが登場。\n\n💡 3つのポイント:\n1️⃣ Claude 4.6 Opusの推論パターンを14,000+サンプルで学習\n2️⃣ 推論効率22%向上（冗長な思考ループを削減）\n3️⃣ HumanEval+で+5.5ptsの精度向上\n\n🔥 abliteration技術で拒否応答を除去した非検閲版。研究目的での活用が推奨。\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2035401634441011410",
+    "has_visual": true,
+    "visual_path": "/config/.openclaw/workspace/output/generated_1.png"
+  },
+  "replies": [
+    {
+      "id": "2035401749276835932",
+      "type": "original_tweet_url",
+      "text": "🔗 元ツイート\n\nhttps://x.com/i/web/status/2035347669787500758\n\nこのツイートで非検閲版モデルが発表されました。",
+      "url": "https://x.com/i/status/2035401749276835932"
+    },
+    {
+      "id": "2035401781581418498",
+      "type": "huggingface_link",
+      "text": "🔗 Hugging Faceモデルページ\n\nhttps://huggingface.co/huihui-ai/Huihui-Qwen3.5-9B-Claude-4.6-Opus-abliterated\n\nモデルのダウンロード、詳細情報、使用上の注意が記載されています。",
+      "url": "https://x.com/i/status/2035401781581418498"
+    }
+  ],
+  "explanation_points": [
+    "Qwen3.5-9BにClaude 4.6 Opusの推論パターンを蒸留（14,000+サンプル）",
+    "推論効率22%向上（冗長な思考ループを削減）",
+    "HumanEval+で+5.5ptsの精度向上",
+    "abliteration技術で拒否応答を除去した非検閲版"
+  ],
+  "source": "bookmark-notification",
+  "monitoring_label": "folder:2026593501866242363"
+}

@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-03-22T02:30:00+09:00",
+  "source": "bookmark",
+  "original_tweet": {
+    "id": "2035088633225781389",
+    "text": "Nemotron-Cascade-2 is now available to run with Ollama.\n\nollama run nemotron-cascade-2\n\nTo run it locally with OpenClaw:\n\nollama launch openclaw --model nemotron-cascade-2\n\nThis model from NVIDIA delivers strong reasoning and agentic capabilities on par with models with up to 20x",
+    "url": "https://x.com/i/web/status/2035088633225781389",
+    "author": "ollama",
+    "author_name": "ollama",
+    "created_at": "2026-03-20T20:18:34.000Z"
+  },
+  "community_post": {
+    "id": "2035408951353987198",
+    "text": "🔍 NVIDIA製超軽量推論モデル「Nemotron-Cascade-2」がOllama対応\n\nNVIDIAが開発したオープンソースモデルNemotron-Cascade-2が、Ollamaで動くようになった。\n\n🎯 ここがすごい:\n• 30BパラメータのMoEモデル\n• 実際に使うのは3B分だけ（超効率的！）\n• 2025年のIMO・IOIで金メダル相当の性能\n• thinkingモードとinstructモード対応\n\n💡 どう使う?\n\nollama run nemotron-cascade-2\n\nOpenClawやClaude Code、Codexでも使える:\n\nollama launch openclaw --model nemotron-cascade-2\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2035408951353987198"
+  },
+  "reply_post": {
+    "id": "2035409008329462165",
+    "text": "📎 元ツイート:\nhttps://x.com/i/web/status/2035088633225781389\n\nNVIDIA公式のollamaアカウントから、Nemotron-Cascade-2のOllama対応がアナウンスされた。20倍のパラメータを持つモデルに匹敵する推論能力を、わずか3Bのアクティベートパラメータで実現している点が注目ポイント。",
+    "url": "https://x.com/i/status/2035409008329462165"
+  },
+  "visual_image": {
+    "generated": true,
+    "url": "https://v3b.fal.media/files/b/0a931550/KYcfvdrrqIETzJcDhCdtQ_C9yy1Ypg.png",
+    "media_id": "2035408856520806400"
+  },
+  "key_points": [
+    "NVIDIA製30B MoEモデル（3Bアクティベートパラメータ）",
+    "2025年IMO/IOI金メダル相当の推論性能",
+    "thinkingモードとinstructモード対応",
+    "Ollamaでローカル実行可能",
+    "OpenClaw、Claude Code、Codex対応"
+  ]
+}

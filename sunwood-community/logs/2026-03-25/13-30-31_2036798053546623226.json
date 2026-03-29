@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-03-25T13:30:31.393818+00:00",
+  "payload_file": "/config/.openclaw/workspace/memory/docs/public/github-scanner-v0.2.0-payload.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/generated_1.png",
+  "main_post": {
+    "id": "2036798053546623226",
+    "text": "🔍 GitHub-Account-Scanner v0.2.0 Released\n\nA major architecture refresh: from Python polling to Worker-first.\n\n📦 What Changed:\n• Migrated to Cloudflare Worker runtime\n• Real-time webhook delivery (no more polling!)\n• GitHub App signature verification\n• Test/Production profile separation\n• AgentAGI explainer prompt auto-routing\n\n🔄 New Flow:\nGitHub App → Cloudflare Worker → Discord Bot API\n\n💡 Key Improvement:\nRelease notifications now trigger AgentAGI explainer workflows automatically when mentions are configured.\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2036798053546623226"
+  },
+  "replies": [
+    {
+      "id": "2036798056730083822",
+      "reply_id": "release",
+      "reply_to": "main",
+      "text": "📎 Release Notes\nFull changelog and upgrade notes:\nhttps://github.com/Sunwood-ai-labs/github-account-scanner/releases/tag/v0.2.0",
+      "url": "https://x.com/i/status/2036798056730083822"
+    },
+    {
+      "id": "2036798058252652877",
+      "reply_id": "repo",
+      "reply_to": "main",
+      "text": "🔗 Repository\nWorker-first GitHub App release notifications:\nhttps://github.com/Sunwood-ai-labs/github-account-scanner",
+      "url": "https://x.com/i/status/2036798058252652877"
+    },
+    {
+      "id": "2036798059687104966",
+      "reply_id": "account",
+      "reply_to": "main",
+      "text": "👤 Sunwood-ai-labs\n715+ repositories of AI/ML tools:\nhttps://github.com/Sunwood-ai-labs",
+      "url": "https://x.com/i/status/2036798059687104966"
+    }
+  ]
+}

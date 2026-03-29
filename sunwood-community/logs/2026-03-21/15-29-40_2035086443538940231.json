@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-03-21T15:29:40.691135+00:00",
+  "original_tweet": {
+    "id": "2035086443538940231",
+    "text": "We just open sourced our AI vulnerability scanner 🔥\n\n👉 https://t.co/04MVJeMRwC\n\nBuilt for the reality that GenAI security isn’t static:\n• jailbreaks &amp; prompt injections evolve weekly\n• agents introduce new attack surfaces\n• most issues aren’t caught until prod\n\nThe scanner:",
+    "url": "https://x.com/i/status/2035086443538940231"
+  },
+  "community_post": {
+    "id": "2035378462933008434",
+    "text": "🔍 注目ポスト解説\n\n🔍 MarcoFigueroa氏がAIモデル脆弱性スキャナー「ai-scanner」をオープンソース公開\n\n🎯 NVIDIA garakベースの包括的なセキュリティツール\n\n📋 主な特徴:\n• 179種類のプローブで35の脆弱性ファミリーをカバー\n• OWASP LLM Top 10に準拠したセキュリティ評価\n• APIベースLLMとブラウザベースチャットUI両対応\n• 攻撃成功率(ASR)スコアリングとトレンド追跡\n• PDFレポート出力・SIEM連携(Splunk/Rsyslog)\n\n🛠️ 技術スタック:\nRuby on Rails + NVIDIA garak + Docker\n\n🏢 エンタープライズ対応:\nマルチテナント・データ暗号化・ユーザー/スキャン無制限\n\nGenAIのセキュリティ脅威は常に進化。\njailbreakやプロンプトインジェクションへの継続的対策が必須の時代に。\n\n\n\n\n$ONIAGI\n\nhttps://x.com/i/status/2035086443538940231",
+    "url": "https://x.com/i/status/2035378462933008434"
+  }
+}

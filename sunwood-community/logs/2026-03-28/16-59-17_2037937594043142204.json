@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-03-28T16:59:17.285332+00:00",
+  "payload_file": "/config/.openclaw/workspace/memory/docs/public/timberboostcontrol-payload.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/timberboostcontrol-diagram.png",
+  "main_post": {
+    "id": "2037937594043142204",
+    "text": "🔍 TimberBoostControl v0.1.0 Released\n\nA Timberborn DLL mod that brings settings.json-driven gameplay customization.\n\n🎯 Key Innovation:\nInstead of hardcoding values, it reads numeric multipliers from a JSON config and regenerates blueprint overrides dynamically.\n\n⚙️ Core Features:\n• Bottom-bar Boost launcher with icon fallback\n• Read-only control panel showing resolved settings path\n• Auto-creates settings.json if missing\n• Regenerates building/character blueprint overrides\n• Tracks generated files for clean replacement\n\n📊 Supported Values:\n• Carry/MoveSpeed/Storage multipliers\n• Build/Science/Power cost percentages\n• Workplace worker multiplier\n\n💡 Use Case:\nEdit settings.json → Reload in-game → Restart → New values applied\n\nPerfect for learning IModStarter, Configurator, ILoadableSingleton, and JSON-driven content generation.\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2037937594043142204"
+  },
+  "replies": [
+    {
+      "id": "2037937596798775792",
+      "reply_id": "release",
+      "reply_to": "main",
+      "text": "📎 Release Notes\nFull changelog and validation details for v0.1.0.\nhttps://github.com/Sunwood-ai-labs/TimberBoostControl/releases/tag/v0.1.0",
+      "url": "https://x.com/i/status/2037937596798775792"
+    },
+    {
+      "id": "2037937598250000703",
+      "reply_id": "repo",
+      "reply_to": "main",
+      "text": "🔗 Repository\nSource code, build instructions, and documentation.\nhttps://github.com/Sunwood-ai-labs/TimberBoostControl",
+      "url": "https://x.com/i/status/2037937598250000703"
+    },
+    {
+      "id": "2037937599642509716",
+      "reply_id": "docs",
+      "reply_to": "main",
+      "text": "📚 Documentation\nGetting started guide, settings reference, and architecture overview.\nhttps://sunwood-ai-labs.github.io/TimberBoostControl/",
+      "url": "https://x.com/i/status/2037937599642509716"
+    }
+  ]
+}

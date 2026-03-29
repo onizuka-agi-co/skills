@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-03-23T10:03:45.113180+00:00",
+  "payload_file": "/config/.openclaw/workspace/skills/sunwood-community/payload-harina-v4.4.0.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/harina-v4.4.0-visual.png",
+  "main_post": {
+    "id": "2036021224120504748",
+    "text": "🔍 Harina v4.4.0: Google Sheets becomes a live operations dashboard\n\nThis release transforms receipt data into auto-refreshing dashboards with formula-driven analytics.\n\n📊 Key Highlights:\n\n• Live Dashboards: Analysis tabs now use Google Sheets formulas, so new receipt rows automatically recalculate KPIs, category totals, and charts\n\n• Duplicate Controls: New 重複確認 sheet with checkbox-based auto-exclusion for clean analysis without touching raw data\n\n• sync-analysis Command: Rebuild dashboards on-demand with targeted year options\n\n• /resume_polling: Clear Drive watcher delays directly from Discord without container restarts\n\n130 tests passed. Full docs in EN/JA.\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2036021224120504748"
+  },
+  "replies": [
+    {
+      "id": "2036021226880307322",
+      "reply_id": "release",
+      "reply_to": "main",
+      "text": "📎 GitHub Release\nDownload and changelog details here:\nhttps://github.com/Sunwood-ai-labs/harina-v4/releases/tag/v4.4.0",
+      "url": "https://x.com/i/status/2036021226880307322"
+    },
+    {
+      "id": "2036021228239307056",
+      "reply_id": "docs-en",
+      "reply_to": "main",
+      "text": "📘 Release Notes (EN)\nFull feature documentation:\nhttps://sunwood-ai-labs.github.io/harina-v4/guide/release-notes-v4.4.0",
+      "url": "https://x.com/i/status/2036021228239307056"
+    },
+    {
+      "id": "2036021229619191829",
+      "reply_id": "docs-ja",
+      "reply_to": "main",
+      "text": "📕 Release Notes (JA)\n日本語の詳細ドキュメント:\nhttps://sunwood-ai-labs.github.io/harina-v4/ja/guide/release-notes-v4.4.0",
+      "url": "https://x.com/i/status/2036021229619191829"
+    },
+    {
+      "id": "2036021231095546318",
+      "reply_id": "walkthrough",
+      "reply_to": "main",
+      "text": "🚀 What's New Walkthrough\nStep-by-step guide for v4.4.0 features:\nhttps://sunwood-ai-labs.github.io/harina-v4/guide/whats-new-v4.4.0",
+      "url": "https://x.com/i/status/2036021231095546318"
+    }
+  ]
+}

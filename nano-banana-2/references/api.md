@@ -1,86 +1,87 @@
 # nano-banana-2 API Reference
 
-## Endpoint
+## Overview
 
-```
-POST https://queue.fal.run/fal-ai/nano-banana-2
+nano-banana-2 is a text-to-image model by fal.ai that generates high-quality images from text prompts.
+
+## Installation
+
+```bash
+pip install fal-client
 ```
 
 ## Authentication
 
-Include API key in Authorization header:
+Set the `FAL_KEY` environment variable:
 
-```
-Authorization: Key YOUR_FAL_KEY
-```
-
-## Request Schema
-
-```json
-{
-  "prompt": "string (required)",
-  "num_images": 1,
-  "aspect_ratio": "auto",
-  "resolution": "1K",
-  "output_format": "png",
-  "safety_tolerance": "4",
-  "seed": null,
-  "enable_web_search": false,
-  "limit_generations": true
-}
+```bash
+export FAL_KEY="your-api-key"
 ```
 
-## Parameters
+Or save to `~/fal-key.txt` in the workspace.
 
-### prompt (required)
-- Type: string
-- Description: Text description of the image to generate
+## Usage
 
-### num_images
-- Type: integer
-- Default: 1
-- Description: Number of images to generate
+### Python (Recommended)
 
-### aspect_ratio
-- Type: enum
-- Default: "auto"
-- Options: auto, 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16
-- Description: Aspect ratio of generated image
+```python
+import fal_client
 
-### resolution
-- Type: enum
-- Default: "1K"
-- Options: 0.5K, 1K, 2K, 4K
-- Description: Resolution of generated image
+result = fal_client.subscribe(
+    "fal-ai/nano-banana-2",
+    arguments={
+        "prompt": "A serene mountain landscape at sunset",
+        "aspect_ratio": "16:9",
+        "resolution": "2K",
+    },
+)
 
-### output_format
-- Type: enum
-- Default: "png"
-- Options: jpeg, png, webp
-- Description: Output format of generated image
+print(result["images"][0]["url"])
+```
 
-### safety_tolerance
-- Type: enum
-- Default: "4"
-- Options: 1, 2, 3, 4, 5, 6
-- Description: Content moderation level (1=strict, 6=permissive)
+### CLI
 
-### seed
-- Type: integer
-- Default: random
-- Description: Random seed for reproducibility
+```bash
+uv run scripts/generate.py --prompt "Your prompt here"
+```
 
-### enable_web_search
-- Type: boolean
-- Default: false
-- Description: Enable web search for up-to-date information
+## Input Schema
 
-### limit_generations
-- Type: boolean
-- Default: true
-- Description: Limit generations to 1 per prompt round
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `prompt` | string | required | Text description of the image |
+| `num_images` | integer | 1 | Number of images to generate (1-4) |
+| `aspect_ratio` | string | auto | Aspect ratio of the image |
+| `resolution` | string | 1K | Resolution: 0.5K, 1K, 2K, 4K |
+| `output_format` | string | png | Format: jpeg, png, webp |
+| `seed` | integer | random | Seed for reproducibility |
+| `enable_web_search` | boolean | false | Enable web search for current info |
+| `safety_tolerance` | string | 4 | Content moderation level (1-6) |
+| `sync_mode` | boolean | false | Return as data URI |
+| `limit_generations` | boolean | true | Limit to 1 generation per prompt |
+| `thinking_level` | string | null | Enable model thinking: minimal, high |
 
-## Response Schema
+### Aspect Ratios
+
+| Ratio | Description |
+|-------|-------------|
+| auto | Let model decide |
+| 21:9 | Ultrawide |
+| 16:9 | Widescreen |
+| 3:2 | Classic photo |
+| 4:3 | Standard |
+| 5:4 | Portrait standard |
+| 1:1 | Square |
+| 4:5 | Portrait |
+| 3:4 | Portrait tall |
+| 2:3 | Portrait taller |
+| 9:16 | Vertical mobile |
+| 4:1 | Panoramic |
+| 1:4 | Ultra vertical |
+| 8:1 | Super wide |
+| 1:8 | Super tall |
+
+## Output Schema
 
 ```json
 {
@@ -88,50 +89,34 @@ Authorization: Key YOUR_FAL_KEY
     {
       "url": "https://...",
       "content_type": "image/png",
-      "file_name": "nano-banana-2-t2i-output.png",
-      "file_size": 123456,
+      "file_name": "generated.png",
+      "file_size": 1234567,
       "width": 1024,
       "height": 1024
     }
   ],
-  "description": ""
+  "description": "",
+  "request_id": "uuid"
 }
 ```
 
-## Example Requests
+## Error Handling
 
-### Basic
-```bash
-curl -X POST https://queue.fal.run/fal-ai/nano-banana-2 \
-  -H "Authorization: Key YOUR_FAL_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "A beautiful sunset over mountains"}'
-```
+| Code | Description |
+|------|-------------|
+| 400 | Invalid request parameters |
+| 401 | Invalid or missing API key |
+| 429 | Rate limit exceeded |
+| 500 | Server error |
 
-### With Options
-```bash
-curl -X POST https://queue.fal.run/fal-ai/nano-banana-2 \
-  -H "Authorization: Key YOUR_FAL_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "A cyberpunk city at night",
-    "aspect_ratio": "16:9",
-    "resolution": "2K",
-    "num_images": 2
-  }'
-```
+## Tips
 
-## Error Responses
+1. **Be specific**: Detailed prompts yield better results
+2. **Use web search**: For current events or specific entities
+3. **Set seed**: For reproducible results
+4. **Choose resolution**: Higher resolution takes longer
 
-### 401 Unauthorized
-Invalid or missing API key.
+## Links
 
-### 402 Payment Required
-API quota exceeded.
-
-### 400 Bad Request
-Invalid request parameters.
-
-## Rate Limits
-
-Refer to fal.ai pricing page for current rate limits.
+- [fal.ai nano-banana-2](https://fal.ai/models/fal-ai/nano-banana-2)
+- [API Documentation](https://fal.ai/models/fal-ai/nano-banana-2/api)

@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-03-22T04:09:37.045304+00:00",
+  "payload_file": "/config/.openclaw/workspace/project/x-bookmarks-watcher/payload-remodex-fork.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/remodex-fork-explainer.png",
+  "main_post": {
+    "id": "2035569708205023434",
+    "text": "📱 RemodexにFork機能が追加\niOSからCodexをリモート操作できるアプリで、リポジトリのフォークが完結\n\n🔀 使い方はシンプル:\n→ チャットで「/fork」\n→ Local か New Worktree を選択\n→ サイドバーで状態確認\n\n💡 Worktree対応で並行作業もしやすく\n外出先からでもフォーク→作業開始まで一気通貫\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2035569708205023434"
+  },
+  "replies": [
+    {
+      "id": "2035569711086485894",
+      "reply_id": "source",
+      "reply_to": "main",
+      "text": "📎 元ポスト\nFork機能のリリース告知とUIキャプチャを確認できます。\nhttps://x.com/i/web/status/2035057633598550188",
+      "url": "https://x.com/i/status/2035569711086485894"
+    },
+    {
+      "id": "2035569712390943140",
+      "reply_id": "image",
+      "reply_to": "main",
+      "text": "🖼️ UIキャプチャ\nFork選択画面の実際の見た目を確認できます。\nhttps://x.com/emanueledpt/status/2035057633598550188/photo/1",
+      "url": "https://x.com/i/status/2035569712390943140"
+    }
+  ]
+}

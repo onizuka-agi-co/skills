@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-03-21T14:43:00+00:00",
+  "event_type": "github_release",
+  "source": {
+    "type": "github_release",
+    "repo": "Sunwood-ai-labs/github-account-scanner-detection-sample-20260321-195933",
+    "version": "v0.1.2",
+    "url": "https://github.com/Sunwood-ai-labs/github-account-scanner-detection-sample-20260321-195933/releases/tag/v0.1.2",
+    "published_at": "2026-03-21T11:43:07Z"
+  },
+  "community_post": {
+    "id": "2035367411818610918",
+    "text": "🚀 Sunwood AI Labs.の注目リリース解説\n\n📦 github-account-scanner-detection-sample v0.1.2\n\n🎯 概要\nGitHubアカウント監視ツール「github-account-scanner」の検出テスト用サンプルリポジトリがリリース。\n\n🔧 技術的ポイント\n• 新規リポジトリ作成の自動検出テスト\n• GitHub Release公開の自動検出テスト\n• Bot API thread notificationの動作確認\n\n💡 背景\ngithub-account-scannerは、GitHubアカウント上のアクティビティを監視し、新規リポジトリやリリースを自動検出するツール。このサンプルリポジトリで検出精度を検証。\n\n🔗 https://github.com/Sunwood-ai-labs/github-account-scanner-detection-sample-20260321-195933/releases/tag/v0.1.2\n\n#ONIZUKA_AGI",
+    "url": "https://x.com/i/status/2035367411818610918"
+  }
+}

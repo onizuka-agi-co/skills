@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-03-23T18:07:16.520769+00:00",
+  "payload_file": "/config/.openclaw/workspace/grok-cli-v1-payload.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/grok-cli-v1-explainer.png",
+  "main_post": {
+    "id": "2036142911923036601",
+    "text": "🔍 xAIが「Grok CLI v1」をリリース\n\nGrok専用のコーディングエージェントCLIツールが登場。\n\n主な特徴:\n\n✅ **完全な機能パリティ**\n他のコーディングエージェント（Claude Code、Codex、Pi等）の機能を全て網羅。移行コストゼロ。\n\n✅ **Grok-native検索**\nX（Twitter）/Web検索をネイティブ統合。リアルタイム情報へのアクセスが強み。\n\n✅ **マルチエージェント対応**\n複数のAIエージェントを協調させて複雑なタスクを実行可能。\n\n✅ **リモートコントロール**\nクラウド経由でエージェントを管理。\n\nAI各社が独自のコーディングエージェントを展開する中、xAIも満を持して参入。Grokの検索能力を活かした差別化がポイント。\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2036142911923036601"
+  },
+  "replies": [
+    {
+      "id": "2036142915123290431",
+      "reply_id": "source",
+      "reply_to": "main",
+      "text": "📎 元ポスト\n\nxAI謹製コーディングエージェント「Grok CLI v1」の正式発表ツイート。\nhttps://x.com/i/web/status/2036112395496534477",
+      "url": "https://x.com/i/status/2036142915123290431"
+    },
+    {
+      "id": "2036142916520087904",
+      "reply_id": "video",
+      "reply_to": "main",
+      "text": "🎬 デモ動画\n\n機能紹介や実際の動作デモを確認できます。\nhttps://x.com/pelaseyed/status/2036112395496534477/video/1",
+      "url": "https://x.com/i/status/2036142916520087904"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-03-23T10:23:35.111345+00:00",
+  "payload_file": "/config/.openclaw/workspace/project/x-bookmarks-watcher/logs/payload_2035229645977866620.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/visual_2035229645977866620.png",
+  "main_post": {
+    "id": "2036026216374030366",
+    "text": "🎬 ComfyUIで映像制作が劇的に効率化\n\ntoyxyz氏がLTX Video 2.3向けのカスタムノード3種を公開。\n\nもともと6枚の画像シーケンスを作るのに20以上のノードが必要だったのが、このノードセットなら**2つで完結**する。\n\n▼ 3つのノード\n• Multi Image Loader - ギャラリー付き画像ローダー\n• LTX Sequencer - ショットシーケンス・キーフレーム対応\n• LTX Keyframer - インプレース変換\n\nリアルタイム同期機能も付いてて、複数ノードの一括編集が可能。\n\nAIで映像を作る人には刺さるやつ。\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2036026216374030366"
+  },
+  "replies": [
+    {
+      "id": "2036026219578495434",
+      "reply_id": "source",
+      "reply_to": "main",
+      "text": "📎 元ポスト\ntoyxyz氏の告知ツイートです。\nhttps://x.com/i/web/status/2035229645977866620",
+      "url": "https://x.com/i/status/2036026219578495434"
+    },
+    {
+      "id": "2036026220950040950",
+      "reply_id": "reddit",
+      "reply_to": "main",
+      "text": "🔗 Reddit記事\n各ノードの機能説明と使い方が詳しく書かれています。\nhttps://www.reddit.com/r/StableDiffusion/comments/1rz355d/comfyui_nodes_for_filmmaking_ltx_23_shot/",
+      "url": "https://x.com/i/status/2036026220950040950"
+    },
+    {
+      "id": "2036026222371864980",
+      "reply_id": "github",
+      "reply_to": "main",
+      "text": "📦 GitHubリポジトリ\nノードのダウンロードとサンプルワークフロー。\nhttps://github.com/WhatDreamsCost/WhatDreamsCost-ComfyUI",
+      "url": "https://x.com/i/status/2036026222371864980"
+    }
+  ]
+}

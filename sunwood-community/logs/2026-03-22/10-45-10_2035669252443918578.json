@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-03-22T10:45:10.215964+00:00",
+  "payload_file": "/config/.openclaw/workspace/payload-github-scanner-test.json",
+  "metadata": {},
+  "image_source": "/config/.openclaw/workspace/memory/docs/public/github-scanner-test-v0.1.4.png",
+  "main_post": {
+    "id": "2035669252443918578",
+    "text": "🔍 GitHub監視システムの動作確認テスト\n\nSunwood-ai-labs が github-account-scanner の検出機能を検証するためのテストリリースを実施。\n\n🎯 検証内容:\n• 新規リポジトリ作成の検出\n• 新規リリース公開の検出\n• Discord通知配信の確認\n\n💡 このリポジトリは監視システムのテスト用であり、実際のプロダクトコードは含まれていません。\n\n$ONIAGI",
+    "url": "https://x.com/i/status/2035669252443918578"
+  },
+  "replies": [
+    {
+      "id": "2035669255795171384",
+      "reply_id": "release",
+      "reply_to": "main",
+      "text": "📎 Release v0.1.4\nテスト用リリースの詳細を確認できます。\nhttps://github.com/Sunwood-ai-labs/github-account-scanner-detection-sample-20260321-195933/releases/tag/v0.1.4",
+      "url": "https://x.com/i/status/2035669255795171384"
+    },
+    {
+      "id": "2035669257342844996",
+      "reply_id": "repo",
+      "reply_to": "main",
+      "text": "🔗 リポジトリ\nサンプルリポジトリの構成と目的を確認できます。\nhttps://github.com/Sunwood-ai-labs/github-account-scanner-detection-sample-20260321-195933",
+      "url": "https://x.com/i/status/2035669257342844996"
+    },
+    {
+      "id": "2035669258747904104",
+      "reply_id": "account",
+      "reply_to": "main",
+      "text": "👤 GitHub Account\nSunwood-ai-labs の他のプロジェクトも確認できます。\nhttps://github.com/Sunwood-ai-labs",
+      "url": "https://x.com/i/status/2035669258747904104"
+    }
+  ]
+}

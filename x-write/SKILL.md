@@ -21,6 +21,12 @@ uv run scripts/x_write.py <command> [args...]
 # ツイート投稿
 uv run scripts/x_write.py post "投稿テキスト"
 
+# 画像付きツイート投稿
+uv run scripts/x_write.py post-image <image_path> "投稿テキスト"
+
+# 図解画像付きツイート投稿（自動生成）
+uv run scripts/x_write.py post-with-diagram "AGIに関する重要な発表" [--style abstract|minimalist|tech|artistic]
+
 # 引用リツイート
 uv run scripts/x_write.py quote <tweet_id> "引用コメント"
 
@@ -32,6 +38,25 @@ uv run scripts/x_write.py community <community_id> "投稿テキスト" --share
 
 # ツイート削除
 uv run scripts/x_write.py delete <tweet_id>
+```
+
+### 図解自動生成機能
+
+`post-with-diagram` コマンドは、ツイートテキストから図解画像を自動生成して投稿する。
+
+**スタイルオプション:**
+- `abstract` - 抽象的な幾何学模様（デフォルト）
+- `minimalist` - シンプルでミニマル
+- `tech` - 技術的な回路パターン
+- `artistic` - アーティスティックで鮮やか
+
+**使用例:**
+```bash
+# AGI関連ツイートに図解を追加
+uv run scripts/x_write.py post-with-diagram "新しいAGI論文が発表されました" --style tech
+
+# シンプルな図解で投稿
+uv run scripts/x_write.py post-with-diagram "機械学習モデルのトレーニングが完了" --style minimalist
 ```
 
 ### いいね・リツイート
@@ -100,6 +125,73 @@ uv run scripts/x_write.py refresh
 アクセストークンは2時間で期限切れ。
 期限切れの場合、自動的にリフレッシュトークンで更新。
 
+## 初回認証・再認証
+
+### 自動認証（推奨）
+
+```bash
+# ローカルサーバーを起動して自動認証
+uv run scripts/x_write.py auth
+
+# または認証専用スクリプト
+uv run scripts/x_auth.py
+```
+
+**手順:**
+1. ブラウザが自動で開く
+2. Twitterでアプリを認証
+3. 自動でコールバックを受け取りトークン保存
+
+### 手動認証（自動が失敗する場合）
+
+```bash
+# 1. 認証URLを生成
+uv run scripts/x_auth.py --url
+
+# 2. ブラウザでURLを開いて認証
+
+# 3. コールバックURLのcodeパラメータを指定
+uv run scripts/x_auth.py --code <code>
+```
+
+### コールバックURI設定
+
+X Developer Portalで以下のコールバックURIを登録済みであること：
+```
+http://localhost:8080/callback
+```
+
+### トークン状態確認
+
+```bash
+uv run scripts/x_auth.py --status
+```
+
+## 必要なファイル
+
+| ファイル | 説明 |
+|---------|------|
+| `x-tokens.json` | アクセストークン（自動生成） |
+| `x-client-credentials.json` | クライアント認証情報（要手動配置） |
+
+### x-client-credentials.json 形式
+
+```json
+{
+  "client_id": "YOUR_CLIENT_ID",
+  "client_secret": "YOUR_CLIENT_SECRET"
+}
+```
+
 ## ハッシュタグルール
 
 投稿時のハッシュタグは **#ONIZUKA_AGI** のみ使用する。
+
+## トラブルシューティング
+
+| エラー | 原因 | 対処 |
+|--------|------|------|
+| 401 Unauthorized | トークン期限切れ | `auth`コマンドで再認証 |
+| Token refresh failed | リフレッシュトークン無効 | `auth`コマンドで再認証 |
+| Callback not received | ポート8080が使用中 | 他のプロセスを停止 |
+| Invalid redirect_uri | コールバックURI未登録 | X Developer Portalで設定 |

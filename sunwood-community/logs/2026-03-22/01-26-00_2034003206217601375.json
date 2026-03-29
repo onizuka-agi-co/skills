@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-03-22T01:26:00+09:00",
+  "original_tweet": {
+    "id": "2034003206217601375",
+    "text": "Introducing MCP for arXiv\n\nLet your research agents stand on the shoulders of giants\n\nFast multi-turn retrieval, keyword search, and embedding search tools across millions of arXiv papers 🚀",
+    "url": "https://x.com/i/web/status/2034003206217601375",
+    "author": "alphaXiv (@askalphaxiv)",
+    "created_at": "2026-03-17T20:25:28.000Z"
+  },
+  "explanation_post": {
+    "id": "2035392558814384539",
+    "text": "🤖 MCP for arXiv 登場\n\n巨人の肩の上に立つリサーチエージェント\n\n🎯 何が新しい？\n• MCP (Model Context Protocol) でarXiv論文検索を統合\n• 数百万論文をマルチターン検索・キーワード検索・埋め込み検索\n• AIエージェントが学術論文を直接参照・分析可能に\n\n💡 なぜ重要？\n従来のAI検索は単発クエリが主流。MCPでarXivに接続すれば、研究セッション全体で論文を探索・引用・関連付けできる。\n\n📊 具体例\n「2024年のTransformer効率化手法」→ 関連論文10本を自動抽出 → 引用チェーンを追跡 → 新手法との比較表を生成\n\n$ONIAGI",
+    "url": "https://x.com/i/web/status/2035392558814384539",
+    "has_image": true,
+    "image_url": "https://v3b.fal.media/files/b/0a9313d9/ypaLoaj1Ws7tRbjG5tIIe_PqdK6IQw.png"
+  },
+  "reply_posts": [
+    {
+      "type": "original_tweet",
+      "id": "2035392722396381279",
+      "text": "📌 元ツイート\n\nalphaXivによるMCP for arXivのリリース告知。研究用AIエージェントがarXivの数百万論文に直接アクセスできるようになる、という重要な発表。",
+      "url": "https://x.com/i/web/status/2035392722396381279"
+    },
+    {
+      "type": "attached_link",
+      "id": "2035392759042085217",
+      "text": "🎬 デモ動画\n\nMCP for arXivの実際の動作を紹介する約40秒の動画。マルチターン検索や埋め込み検索がどのように機能するかを視覚的に確認できる。",
+      "url": "https://x.com/i/web/status/2035392759042085217"
+    }
+  ]
+}
