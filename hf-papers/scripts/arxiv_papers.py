@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Optional
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
 
 # arXiv API endpoint
 ARXIV_API = "http://export.arxiv.org/api/query"
@@ -42,8 +43,15 @@ def fetch_arxiv_papers(
             with open(cache_file, "r") as f:
                 return json.load(f)
     
-    # Build URL
-    url = f"{ARXIV_API}?search_query={query}&start={start}&max_results={max_results}&sortBy=submittedDate&sortOrder=descending"
+    # Build URL (properly encoded)
+    params = {
+        "search_query": query,
+        "start": start,
+        "max_results": max_results,
+        "sortBy": "submittedDate",
+        "sortOrder": "descending",
+    }
+    url = f"{ARXIV_API}?{urlencode(params)}"
     
     request = Request(
         url,
