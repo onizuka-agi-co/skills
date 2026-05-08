@@ -45,9 +45,9 @@ def get_embedding(text: str, api_key: str) -> Optional[list[float]]:
     if len(text) > max_chars:
         text = text[:max_chars]
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
     payload = {
-        "model": "models/text-embedding-004",
+        "model": "models/gemini-embedding-001",
         "content": {
             "parts": [{"text": text}]
         }
@@ -72,9 +72,9 @@ def get_embedding(text: str, api_key: str) -> Optional[list[float]]:
 
 def get_query_embedding(query: str, api_key: str) -> Optional[list[float]]:
     """Get embedding for search query."""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
     payload = {
-        "model": "models/text-embedding-004",
+        "model": "models/gemini-embedding-001",
         "content": {
             "parts": [{"text": query}]
         }
@@ -255,14 +255,94 @@ def search_in_file(file_path: Path, query: str, args: argparse.Namespace) -> Opt
     }
 
 
+def faiss_search(query: str, args: argparse.Namespace, api_key: str) -> list[dict]:
+    """Perform semantic search using FAISS index."""
+    INDEX_DIR = Path("/config/.openclaw/workspace/data/index")
+    faiss_file = INDEX_DIR / "knowledge.faiss"
+    meta_file = INDEX_DIR / "metadata.json"
+
+    if not faiss_file.exists() or not meta_file.exists():
+        return []
+
+    try:
+        import faiss
+        import numpy as np
+    except ImportError:
+        return []
+
+    query_embedding = get_query_embedding(query, api_key)
+    if not query_embedding:
+        return []
+
+    index = faiss.read_index(str(faiss_file))
+    metadata = json.loads(meta_file.read_text())
+    files_meta = metadata.get("files", {})
+
+    # Normalize query vector
+    q_vec = np.array([query_embedding], dtype=np.float32)
+    faiss.normalize_L2(q_vec)
+
+    limit = args.limit or 10
+    scores, indices = index.search(q_vec, min(limit * 2, index.ntotal))
+
+    results = []
+    file_list = list(files_meta.items())
+
+    for score, idx in zip(scores[0], indices[0]):
+        if idx < 0 or idx >= len(file_list):
+            continue
+        if score < 0.3:
+            continue
+
+        path, meta = file_list[idx]
+        if not isinstance(meta, dict):
+            continue
+
+        # Apply filters
+        if args.type and meta.get("type") != args.type:
+            continue
+
+        results.append({
+            "title": meta.get("title", Path(path).stem),
+            "source": meta.get("type", "other"),
+            "date": meta.get("date", ""),
+            "path": path,
+            "snippet": "",
+            "score": round(float(score) * 100, 1),
+            "semantic": True,
+        })
+
+        if len(results) >= limit:
+            break
+
+    # Enrich snippets
+    workspace = Path("/config/.openclaw/workspace")
+    for r in results:
+        fpath = workspace / r["path"]
+        if fpath.exists():
+            try:
+                content = extract_text(fpath.read_text(encoding="utf-8"))
+                r["snippet"] = extract_snippet(content, query)
+            except Exception:
+                pass
+
+    return results
+
+
 def semantic_search(query: str, all_files: list[Path], args: argparse.Namespace, api_key: str) -> list[dict]:
-    """Perform semantic search using embeddings."""
+    """Perform semantic search using FAISS or fallback to per-file embeddings."""
+    # Try FAISS first
+    faiss_results = faiss_search(query, args, api_key)
+    if faiss_results:
+        return faiss_results
+
+    # Fallback: per-file embedding comparison
     query_embedding = get_query_embedding(query, api_key)
     if not query_embedding:
         print("⚠️ Failed to get query embedding")
         return []
 
-    print(f"🧠 Performing semantic search...")
+    print(f"🧠 Performing semantic search (fallback)...")
     results = []
 
     for file_path in all_files:
