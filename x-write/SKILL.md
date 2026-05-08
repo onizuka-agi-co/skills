@@ -187,6 +187,51 @@ uv run scripts/x_auth.py --status
 
 投稿時のハッシュタグは **#ONIZUKA_AGI** のみ使用する。
 
+## 投稿スケジューラー
+
+投稿キューを管理し、指定時刻に自動投稿するシステム。
+
+```bash
+# キューに追加（時刻指定）
+uv run scripts/x_scheduler.py add "投稿テキスト" --at "2026-05-09T18:00:00+09:00"
+
+# キューに追加（タグ付き）
+uv run scripts/x_scheduler.py add "投稿テキスト" --tags paper AGI --priority 3
+
+# キュー一覧
+uv run scripts/x_scheduler.py list
+
+# 投稿を削除
+uv run scripts/x_scheduler.py remove Q0509074702
+
+# 予定時刻の投稿を実行
+uv run scripts/x_scheduler.py process
+
+# 最適投稿時間の提案
+uv run scripts/x_scheduler.py suggest
+
+# 統計情報
+uv run scripts/x_scheduler.py stats
+```
+
+**機能:**
+- 投稿キューの管理（追加・一覧・削除）
+- 指定時刻の自動投稿（`process`をcron実行）
+- 投稿間隔の最小保証（15分）
+- 投稿履歴の統合管理
+- 最適投稿時間の提案
+
+**定期実行の設定:**
+
+schedule-tasks.yamlに以下を追加：
+
+```yaml
+- name: "X投稿スケジューラー処理"
+  schedule: "*/15 * * * *"  # 15分ごと
+  prompt: " Scheduler: uv run skills/x-write/scripts/x_scheduler.py process"
+  enabled: true
+```
+
 ## トラブルシューティング
 
 | エラー | 原因 | 対処 |
