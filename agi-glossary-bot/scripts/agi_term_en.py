@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 AGI Glossary Bot — English Edition
-Posts daily AGI term explanations in English to X.
-Part of the AGI Knowledge Hub i18n initiative.
+Pick one AGI concept per day, generate an English explanation + image, and post to X.
+Part of the AGI Knowledge Hub 多言語化 initiative.
 """
 
 import argparse
@@ -16,161 +16,42 @@ from datetime import datetime, timezone, timedelta
 WORKSPACE = Path(__file__).parent.parent.parent.parent
 DATA_DIR = WORKSPACE / "data"
 STATE_FILE = DATA_DIR / "agi-glossary-en-state.json"
-
-AGI_TERMS = [
-    {
-        "term": "Reward Hacking",
-        "en": "When an AI exploits the reward function in unintended ways to maximize its score, rather than achieving the actual goal.",
-        "example": "A cleaning robot that covers messes with cups instead of actually cleaning."
-    },
-    {
-        "term": "Emergent Abilities",
-        "en": "Capabilities that suddenly appear in large language models at scale, even though they were not explicitly trained for them.",
-        "example": "GPT-4 solving math olympiad problems without specific math training."
-    },
-    {
-        "term": "Scaling Laws",
-        "en": "Empirical laws showing that model performance improves predictably with more data, parameters, and compute.",
-        "example": "Kaplan et al. (2020) showed loss scales as a power law of model size."
-    },
-    {
-        "term": "Chain-of-Thought Prompting",
-        "en": "A prompting technique where the model is asked to reason step-by-step, dramatically improving performance on complex tasks.",
-        "example": "Instead of 'What is 15% of 82?', ask 'Let me think step by step...'"
-    },
-    {
-        "term": "Constitutional AI",
-        "en": "An alignment approach where AI systems critique and revise their own outputs using a set of principles (a 'constitution').",
-        "example": "Claude uses Constitutional AI to avoid harmful outputs while remaining helpful."
-    },
-    {
-        "term": "RLHF",
-        "en": "Reinforcement Learning from Human Feedback — training AI models to align with human preferences using reward models trained on human judgments.",
-        "example": "ChatGPT was fine-tuned using RLHF to produce more helpful responses."
-    },
-    {
-        "term": "Mixture of Experts (MoE)",
-        "en": "An architecture that activates only a subset of model parameters per input, enabling massive models that stay efficient.",
-        "example": "Mixtral 8x7B uses 8 expert networks but only routes to 2 per token."
-    },
-    {
-        "term": "In-Context Learning",
-        "en": "The ability of LLMs to learn new tasks from examples provided in the prompt, without any parameter updates.",
-        "example": "Showing 3 translation examples in the prompt, then the model translates a new sentence."
-    },
-    {
-        "term": "Alignment",
-        "en": "The challenge of ensuring AI systems pursue goals that match human values and intentions, not just their literal specification.",
-        "example": "Making sure a content filter doesn't become overzealous and block educational content."
-    },
-    {
-        "term": "Agentic AI",
-        "en": "AI systems designed to autonomously plan, execute multi-step tasks, use tools, and adapt their approach — going beyond simple Q&A.",
-        "example": "An AI that can research, write, and publish a blog post with minimal human guidance."
-    },
-    {
-        "term": "Tool Use",
-        "en": "The ability of LLMs to invoke external tools — search engines, calculators, APIs — to extend their capabilities beyond text generation.",
-        "example": "ChatGPT calling a Python interpreter to run code before answering."
-    },
-    {
-        "term": "Retrieval-Augmented Generation (RAG)",
-        "en": "A technique that combines LLMs with external knowledge retrieval, grounding responses in up-to-date, factual information.",
-        "example": "A customer support bot that searches a product database before answering."
-    },
-    {
-        "term": "World Model",
-        "en": "An AI's internal representation of how the world works, enabling it to predict outcomes and plan actions in dynamic environments.",
-        "example": "A self-driving car's model predicting how pedestrians will move."
-    },
-    {
-        "term": "Test-Time Compute",
-        "en": "Using additional computation during inference to improve reasoning quality — trading speed for accuracy on hard problems.",
-        "example": "OpenAI o1 spending more tokens 'thinking' before answering complex math."
-    },
-    {
-        "term": "Process Reward Models (PRM)",
-        "en": "Models that evaluate each step of a reasoning process, not just the final answer — rewarding correct thinking over lucky guesses.",
-        "example": "Grading each step of a math solution, not just the final number."
-    },
-    {
-        "term": "Synthetic Data",
-        "en": "Training data generated by AI models rather than collected from the real world — increasingly used to train the next generation of models.",
-        "example": "Using GPT-4 to generate millions of QA pairs for training a smaller model."
-    },
-    {
-        "term": "Mechanistic Interpretability",
-        "en": "The study of understanding exactly what individual neurons and circuits inside neural networks compute — opening the black box.",
-        "example": "Finding the 'induction head' circuits that enable in-context learning."
-    },
-    {
-        "term": "Multimodal AI",
-        "en": "AI systems that can process and reason across multiple types of data — text, images, audio, video — in a unified model.",
-        "example": "GPT-4V understanding a meme by combining image recognition with cultural context."
-    },
-    {
-        "term": "Tree of Thoughts",
-        "en": "A reasoning framework where the AI explores multiple solution paths in a tree structure, evaluating and backtracking to find the best answer.",
-        "example": "Solving a puzzle by trying several moves ahead and choosing the best branch."
-    },
-    {
-        "term": "Zero-Shot Learning",
-        "en": "The ability to perform a task with zero examples — relying purely on pre-trained knowledge and task description.",
-        "example": "Translating Japanese to Swahili without ever seeing that pair during training."
-    },
-    {
-        "term": "Model Distillation",
-        "en": "Compressing a large model's knowledge into a smaller one — like a student learning from a professor. Trades some accuracy for efficiency.",
-        "example": "Distilling GPT-4 capabilities into a model 100x smaller."
-    },
-    {
-        "term": "Self-Play",
-        "en": "A learning technique where an AI trains by playing against itself, discovering increasingly sophisticated strategies through iteration.",
-        "example": "AlphaGo improving by playing millions of games against its own previous versions."
-    },
-    {
-        "term": "Representation Engineering",
-        "en": "Directly manipulating internal activations of a neural network to control its behavior — editing the 'thoughts' rather than the prompts.",
-        "example": "Making a model more honest by adjusting its internal honesty direction."
-    },
-    {
-        "term": "Catastrophic Forgetting",
-        "en": "When a neural network loses previously learned knowledge upon learning new information — a major challenge for continual learning.",
-        "example": "A model that learns Spanish but suddenly can't speak French anymore."
-    },
-    {
-        "term": "Sparse Attention",
-        "en": "Attention mechanisms that only compute relevance for a subset of tokens, enabling models to handle very long contexts efficiently.",
-        "example": "Processing a 1M token document by only attending to relevant sections."
-    },
-    {
-        "term": "Gradient Accumulation",
-        "en": "A training trick that simulates large batch sizes by accumulating gradients over multiple small batches before updating weights.",
-        "example": "Training with effective batch size 512 on a GPU that only fits batch size 32."
-    },
-    {
-        "term": "Softmax Temperature",
-        "en": "A parameter controlling the 'sharpness' of probability distributions in AI models. Low temperature = deterministic, high = creative.",
-        "example": "Temperature 0 for code generation, temperature 0.8 for poetry."
-    },
-    {
-        "term": "Frontier Models",
-        "en": "The most capable AI models at the cutting edge — posing both unprecedented opportunities and risks that we haven't encountered before.",
-        "example": "Models like GPT-4, Claude 3.5, and Gemini Ultra define the current frontier."
-    },
-    {
-        "term": "Instruction Tuning",
-        "en": "Fine-tuning a language model on instruction-following examples, transforming it from a text completer into a helpful assistant.",
-        "example": "Turning raw GPT into ChatGPT by training on human-written instruction pairs."
-    },
-    {
-        "term": "Grokking",
-        "en": "A phenomenon where models suddenly generalize long after overfitting their training data — suggesting deep learning finds solutions in phases.",
-        "example": "A model memorizing math facts at step 1K, but truly understanding math at step 100K."
-    },
-]
+FAL_KEY_FILE = WORKSPACE / "fal-key.txt"
 
 JST = timezone(timedelta(hours=9))
+
+AGI_TERMS = [
+    {"term": "Reward Hacking", "desc": "AI finds unexpected shortcuts to maximize rewards, exploiting gaps between the specified objective and the true intent."},
+    {"term": "Emergent Abilities", "desc": "Large language models suddenly exhibit capabilities not present in smaller models, arising from scale alone."},
+    {"term": "Scaling Laws", "desc": "Predictable relationships between model performance and factors like parameter count, dataset size, and compute."},
+    {"term": "Chain-of-Thought", "desc": "Prompting models to reason step-by-step, dramatically improving performance on complex problems."},
+    {"term": "Constitutional AI", "desc": "An alignment technique where AI systems follow a set of principles to self-correct and refine their outputs."},
+    {"term": "RLHF", "desc": "Reinforcement Learning from Human Feedback — training AI to align with human preferences through reward signals."},
+    {"term": "Mixture of Experts", "desc": "Routing inputs to specialized sub-models, activating only relevant experts for efficiency and performance."},
+    {"term": "In-Context Learning", "desc": "Learning new tasks from examples provided in the prompt, without any parameter updates."},
+    {"term": "Instruction Tuning", "desc": "Fine-tuning models on instruction-following data to better understand and execute user intent."},
+    {"term": "Alignment", "desc": "The challenge of ensuring AI systems pursue goals that match human values and intentions."},
+    {"term": "Frontier Models", "desc": "The most advanced AI models at the cutting edge, posing novel risks and capabilities."},
+    {"term": "Agentic AI", "desc": "AI systems that autonomously plan, execute, and iterate — moving from passive responders to active agents."},
+    {"term": "Tool Use", "desc": "LLMs calling external tools (search, calculators, APIs) to extend their capabilities beyond text generation."},
+    {"term": "Retrieval-Augmented Generation", "desc": "RAG — grounding AI outputs by retrieving relevant documents from external knowledge bases at inference time."},
+    {"term": "World Model", "desc": "An AI's internal representation of how environments evolve, enabling prediction and planning."},
+    {"term": "Test-Time Compute", "desc": "Allocating additional computation during inference for deeper reasoning and higher accuracy."},
+    {"term": "Sparse Attention", "desc": "Efficiently processing long contexts by computing attention only over relevant token subsets."},
+    {"term": "Process Reward Model", "desc": "Evaluating each step of reasoning rather than just the final answer, rewarding correct thinking processes."},
+    {"term": "Synthetic Data", "desc": "Training AI models on data generated by other AI systems, amplifying available training resources."},
+    {"term": "Grokking", "desc": "Delayed generalization — models suddenly improve after extended overtraining, long past traditional stopping points."},
+    {"term": "Model Distillation", "desc": "Compressing knowledge from large models into smaller, faster ones while preserving performance."},
+    {"term": "Multimodal", "desc": "Unified processing of text, images, audio, and other modalities within a single model architecture."},
+    {"term": "Self-Play", "desc": "AI improving through competition against itself, discovering novel strategies without human data."},
+    {"term": "Tree of Thoughts", "desc": "Exploring multiple reasoning paths as a branching tree to find optimal solutions through deliberate search."},
+    {"term": "Mechanistic Interpretability", "desc": "Reverse-engineering neural networks to understand how internal circuits produce specific behaviors."},
+    {"term": "Representation Engineering", "desc": "Manipulating model internals to control outputs — reading and writing representations for alignment."},
+    {"term": "Catastrophic Forgetting", "desc": "Learning new tasks causes dramatic performance loss on previously mastered ones."},
+    {"term": "Zero-Shot Learning", "desc": "Performing tasks without any examples or demonstrations, relying purely on pre-trained knowledge."},
+    {"term": "Gradient Accumulation", "desc": "Simulating large batch training by accumulating gradients across multiple forward passes."},
+    {"term": "Softmax Temperature", "desc": "A parameter controlling output diversity — low temperature for deterministic, high for creative generation."},
+]
 
 
 def load_state():
@@ -191,31 +72,24 @@ def select_term(state):
         available = AGI_TERMS
         state["posted_terms"] = []
     today = datetime.now(JST).strftime("%Y-%m-%d")
-    seed = hash(today + "_en") % len(available)
+    seed = hash(today) % len(available)
     return available[seed]
 
 
 def generate_tweet(term_info):
     term = term_info["term"]
-    en = term_info["en"]
-    example = term_info.get("example", "")
-    
-    text = f"🧠 AGI Term of the Day — \"{term}\"\n\n{en}"
-    if example:
-        text += f"\n\n💡 {example}"
-    text += "\n\n#ONIZUKA_AGI #AGI #AI"
-    
-    # Ensure within 280 chars (basic check)
-    if len(text) > 280:
-        text = f"🧠 AGI Term — \"{term}\"\n\n{en}\n\n#ONIZUKA_AGI #AGI #AI"
-    
-    return text
+    desc = term_info["desc"]
+    return f"""🧠 AGI Glossary — "{term}"
+
+{desc}
+
+#AGI #AI #ONIZUKA_AGI"""
 
 
 def generate_image_prompt(term_info):
     term = term_info["term"]
     return (
-        f"A clean, modern infographic illustration about the AI/AGI concept '{term}'. "
+        f"A clean, modern infographic illustration about the AI concept '{term}'. "
         f"Abstract, minimalist style with soft gradients. "
         f"Professional, educational, tech-themed. "
         f"Dark background with glowing neural network elements. "
@@ -223,38 +97,10 @@ def generate_image_prompt(term_info):
     )
 
 
-def run_generation(prompt):
-    gen_script = WORKSPACE / "skills" / "nano-banana-2" / "scripts" / "generate.py"
-    fal_key = (WORKSPACE / "fal-key.txt").read_text().strip()
-    result = subprocess.run(
-        ["uv", "run", str(gen_script),
-         "--prompt", prompt,
-         "--aspect-ratio", "1:1",
-         "--resolution", "1K",
-         "--output-format", "png",
-         "--save", "--json"],
-        capture_output=True, text=True, timeout=120,
-        env={**os.environ, "FAL_KEY": fal_key}
-    )
-    if result.returncode == 0:
-        for line in result.stdout.strip().split('\n'):
-            if "http" in line and ("fal" in line or "storage" in line):
-                return line.strip()
-        try:
-            data = json.loads(result.stdout.strip().split('\n')[-1])
-            return data.get("images", [{}])[0].get("url")
-        except (json.JSONDecodeError, IndexError):
-            pass
-    return None
-
-
-def post_to_x(text, media_url=None):
-    x_write_script = WORKSPACE / "skills" / "x-write" / "scripts" / "x_write.py"
-    cmd = ["uv", "run", str(x_write_script), "tweet", "--text", text]
-    if media_url:
-        cmd.extend(["--media", media_url])
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-    return result.returncode == 0, result.stdout, result.stderr
+def run_cmd(cmd, timeout=120):
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+                           env=os.environ.copy())
+    return result
 
 
 def main():
@@ -265,60 +111,95 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Don't post to X")
     parser.add_argument("--no-image", action="store_true", help="Skip image generation")
     args = parser.parse_args()
-    
+
     state = load_state()
     term_info = select_term(state)
-    
+
     if args.command == "select":
         print(f"Term: {term_info['term']}")
-        print(f"EN:   {term_info['en']}")
-        if term_info.get("example"):
-            print(f"Ex:   {term_info['example']}")
+        print(f"Desc: {term_info['desc']}")
         return
-    
+
     tweet_text = generate_tweet(term_info)
-    
+
     if args.command == "preview":
         print("=== Tweet ===")
         print(tweet_text)
-        print(f"\nLength: {len(tweet_text)} chars")
-        print("\n=== Image Prompt ===")
+        print()
+        print("=== Image Prompt ===")
         print(generate_image_prompt(term_info))
         return
-    
+
     # Full pipeline
-    print(f"[1/3] Term: {term_info['term']}")
-    
+    print(f"[1/3] Selected term: {term_info['term']}")
+
+    # Generate image
     image_url = None
     if not args.no_image:
         print("[2/3] Generating image...")
         try:
-            image_url = run_generation(generate_image_prompt(term_info))
-            if image_url:
-                print(f"  ✓ Image: {image_url}")
+            gen_script = WORKSPACE / "skills" / "nano-banana-2" / "scripts" / "generate.py"
+            if not gen_script.exists():
+                print("  nano-banana-2 generate.py not found, skipping image")
             else:
-                print("  ✗ Image generation unclear")
+                prompt = generate_image_prompt(term_info)
+                fal_key = FAL_KEY_FILE.read_text().strip() if FAL_KEY_FILE.exists() else ""
+                env = {**os.environ, "FAL_KEY": fal_key}
+                result = subprocess.run(
+                    ["uv", "run", str(gen_script),
+                     "--prompt", prompt,
+                     "--aspect-ratio", "1:1",
+                     "--resolution", "1K",
+                     "--output-format", "png",
+                     "--save", "--json"],
+                    capture_output=True, text=True, timeout=120, env=env
+                )
+                if result.returncode == 0:
+                    for line in result.stdout.strip().split('\n'):
+                        line = line.strip()
+                        if line.startswith('{'):
+                            try:
+                                gen_result = json.loads(line)
+                                image_url = gen_result.get("images", [{}])[0].get("url")
+                                break
+                            except json.JSONDecodeError:
+                                continue
+                    if image_url:
+                        print(f"  Image: {image_url}")
+                    else:
+                        print("  No image URL found in output")
+                else:
+                    print(f"  Image generation failed: {result.stderr[:200]}")
         except Exception as e:
-            print(f"  ✗ Error: {e}")
-    else:
-        print("[2/3] Skipping image")
-    
+            print(f"  Image error: {e}")
+
+    if args.no_image or not image_url:
+        print("[2/3] Skipping image generation")
+
+    # Post to X
     if args.dry_run:
-        print("[3/3] DRY RUN:")
+        print("[3/3] DRY RUN — would post:")
         print(tweet_text)
         if image_url:
-            print(f"  Media: {image_url}")
+            print(f"  Image: {image_url}")
     else:
         print("[3/3] Posting to X...")
-        ok, out, err = post_to_x(tweet_text, image_url)
-        if ok:
-            print("  ✓ Posted!")
-            state["posted_terms"].append(term_info["term"])
-            state["last_post_date"] = datetime.now(JST).isoformat()
-            save_state(state)
-        else:
-            print(f"  ✗ Failed: {err[:200]}")
-    
+        try:
+            x_write_script = WORKSPACE / "skills" / "x-write" / "scripts" / "x_write.py"
+            cmd = ["uv", "run", str(x_write_script), "tweet", "--text", tweet_text]
+            if image_url:
+                cmd.extend(["--media", image_url])
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            if result.returncode == 0:
+                print("  Posted successfully!")
+                state["posted_terms"].append(term_info["term"])
+                state["last_post_date"] = datetime.now(JST).isoformat()
+                save_state(state)
+            else:
+                print(f"  Post failed: {result.stderr[:200]}")
+        except Exception as e:
+            print(f"  Post error: {e}")
+
     print(f"\nDone! Term: {term_info['term']}")
 
 
