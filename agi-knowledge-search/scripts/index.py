@@ -19,6 +19,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+import time
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 
@@ -76,6 +77,8 @@ def get_embedding(text: str, api_key: str) -> Optional[list[float]]:
             data = json.loads(response.read().decode("utf-8"))
             return data.get("embedding", {}).get("values", [])
     except HTTPError as e:
+        if e.code == 429:
+            return "rate_limited"
         print(f"⚠️ API error: {e.code} - {e.read().decode()[:200]}")
         return None
     except Exception as e:
@@ -197,10 +200,18 @@ def main():
             print("✓ (cached)")
             embedding = cached["embedding"]
         else:
-            # Generate new embedding
-            embedding = get_embedding(plain_text[:2000], api_key)
-            if not embedding:
-                print("❌ Embedding failed")
+            # Generate new embedding with retry
+            for attempt in range(3):
+                embedding = get_embedding(plain_text[:2000], api_key)
+                if embedding == "rate_limited":
+                    wait = 60 * (attempt + 1)
+                    print(f"⏳ Rate limited, waiting {wait}s... (attempt {attempt+1}/3)")
+                    time.sleep(wait)
+                    continue
+                if embedding:
+                    break
+            if not embedding or embedding == "rate_limited":
+                print("❌ Embedding failed (rate limit)")
                 continue
             print("✓ (new)")
 
